@@ -247,4 +247,4 @@ const Settings = {
 };
 
 // ===== BOOT =====
-document.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('DOMContentLoaded', () => Auth.init());
