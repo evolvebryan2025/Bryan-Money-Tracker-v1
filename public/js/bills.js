@@ -55,13 +55,13 @@ const Bills = {
 
         return `
           <tr class="${rowClass} ${urgencyClass} ${checked ? 'row-selected' : ''}">
-            <td class="col-check"><input type="checkbox" ${checked} onchange="Bills.toggleOne('${b.id}', this.checked)" title="Select bill"></td>
-            <td><strong>${Utils.esc(b.name)}</strong></td>
-            <td>${Utils.esc(b.category || '--')}</td>
-            <td class="col-amount">${b.amount ? Utils.money(b.amount) : '--'}</td>
-            <td>${b.dueDate ? Utils.dateStr(b.dueDate) : '--'}</td>
-            <td><span class="badge ${badgeClass}">${b.status}</span></td>
-            <td>
+            <td class="col-check" data-label=""><input type="checkbox" ${checked} onchange="Bills.toggleOne('${b.id}', this.checked)" title="Select bill"></td>
+            <td data-label="Bill Name"><strong>${Utils.esc(b.name)}</strong></td>
+            <td data-label="Category">${Utils.esc(b.category || '--')}</td>
+            <td class="col-amount" data-label="Amount">${b.amount ? Utils.money(b.amount) : '--'}</td>
+            <td data-label="Due Date">${b.dueDate ? Utils.dateStr(b.dueDate) : '--'}</td>
+            <td data-label="Status"><span class="badge ${badgeClass}">${b.status}</span></td>
+            <td class="col-actions" data-label="">
               ${b.status !== 'paid' ? `<button class="btn btn-sm btn-green" onclick="Bills.markPaid('${b.id}')">Pay</button>` : ''}
               <button class="btn btn-sm" onclick="Bills.edit('${b.id}')">Edit</button>
               <button class="btn btn-sm btn-red" onclick="Bills.remove('${b.id}')">Del</button>

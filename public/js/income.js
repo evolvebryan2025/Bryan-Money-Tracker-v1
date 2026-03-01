@@ -26,12 +26,12 @@ const Income = {
 
         return `
           <tr>
-            <td><strong>${Utils.esc(i.name)}</strong></td>
-            <td class="col-amount">${i.amount ? Utils.money(i.amount) : '--'}</td>
-            <td>${Utils.esc(i.schedule || '--')}</td>
-            <td>${i.nextDate ? Utils.dateStr(i.nextDate) : '--'} ${i.note ? '<br><small style="color:var(--text-muted)">' + Utils.esc(i.note) + '</small>' : ''}</td>
-            <td><span class="badge ${badgeClass}">${i.status}</span></td>
-            <td>
+            <td data-label="Source"><strong>${Utils.esc(i.name)}</strong></td>
+            <td class="col-amount" data-label="Amount">${i.amount ? Utils.money(i.amount) : '--'}</td>
+            <td data-label="Schedule">${Utils.esc(i.schedule || '--')}</td>
+            <td data-label="Next Date">${i.nextDate ? Utils.dateStr(i.nextDate) : '--'} ${i.note ? '<br><small style="color:var(--text-muted)">' + Utils.esc(i.note) + '</small>' : ''}</td>
+            <td data-label="Status"><span class="badge ${badgeClass}">${i.status}</span></td>
+            <td class="col-actions" data-label="">
               ${i.status !== 'received' ? `<button class="btn btn-sm btn-green" onclick="Income.markReceived('${i.id}')">Received</button>` : ''}
               <button class="btn btn-sm" onclick="Income.edit('${i.id}')">Edit</button>
               <button class="btn btn-sm btn-red" onclick="Income.remove('${i.id}')">Del</button>

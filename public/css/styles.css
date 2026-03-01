@@ -3008,3 +3008,553 @@ canvas {
 .link-cyan:hover {
   text-decoration: underline;
 }
+
+/* ===== MOBILE APP ENHANCEMENTS ===== */
+
+/* Mobile-first viewport optimization */
+@media (max-width: 768px) {
+  /* Prevent text inflation on iOS */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Prevent pull-to-refresh on certain elements */
+  body {
+    overscroll-behavior-y: contain;
+  }
+
+  /* Better spacing for mobile */
+  #main-content {
+    padding: 1rem;
+    padding-bottom: 6rem;
+  }
+
+  /* Larger touch targets for buttons */
+  .btn {
+    min-height: 48px;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 12px;
+  }
+
+  .btn-sm {
+    min-height: 40px;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  /* Active states for better feedback */
+  .btn:active {
+    transform: scale(0.97);
+    opacity: 0.85;
+  }
+
+  .nav-link:active,
+  .mob-link:active {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+
+  /* Better metric cards on mobile */
+  .metric-card {
+    padding: 1.25rem;
+    border-radius: 14px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .metric-card:active {
+    transform: scale(0.98);
+  }
+
+  /* Improved daily budget hero */
+  .daily-budget-hero {
+    padding: 2rem 1.5rem;
+    border-radius: 20px;
+    margin-bottom: 1.5rem;
+  }
+
+  .budget-amount {
+    font-size: 2.75rem;
+    letter-spacing: -2px;
+    font-weight: 800;
+  }
+
+  /* Section cards with better spacing */
+  .section-card {
+    padding: 1.25rem;
+    border-radius: 14px;
+    margin-bottom: 1.25rem;
+  }
+
+  .section-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Form inputs - prevent zoom on iOS */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevents iOS zoom */
+    padding: 0.875rem 1rem;
+    border-radius: 10px;
+    min-height: 48px;
+  }
+
+  /* Better modal experience */
+  .modal-overlay {
+    align-items: flex-end;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    border-radius: 20px 20px 0 0;
+    max-height: 90vh;
+    animation: slideUpMobile 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes slideUpMobile {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+  }
+
+  .modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+
+  /* Mobile more menu improvements */
+  .mob-more-sheet {
+    border-radius: 20px 20px 0 0;
+    padding: 1.5rem 1rem 2rem;
+    max-height: 70vh;
+  }
+
+  .mob-more-link {
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    min-height: 56px;
+    transition: all 0.2s ease;
+  }
+
+  .mob-more-link:active {
+    transform: scale(0.97);
+    background: var(--bg-card-hover);
+  }
+
+  /* Mobile navigation enhancements */
+  #mobile-nav {
+    padding: 0.5rem 0.25rem 0.75rem;
+    box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .mob-link {
+    padding: 0.6rem 0.5rem;
+    border-radius: 10px;
+    min-height: 60px;
+    transition: all 0.2s ease;
+  }
+
+  .mob-link span {
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-top: 0.25rem;
+  }
+
+  .mob-link svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .mob-link.active {
+    background: var(--red-08);
+  }
+
+  /* Chat improvements for mobile */
+  .chat-container {
+    height: calc(100vh - 140px);
+    border-radius: 16px;
+  }
+
+  .chat-bubble {
+    max-width: 85%;
+    font-size: 0.95rem;
+    padding: 0.875rem 1.125rem;
+    border-radius: 16px;
+  }
+
+  .chat-input-area {
+    padding: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .chat-input-area input {
+    padding: 0.875rem 1.125rem;
+    font-size: 16px !important;
+    border-radius: 12px;
+    min-height: 48px;
+  }
+
+  /* Timeline improvements */
+  .timeline-header {
+    padding: 1.25rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .timeline-grid {
+    gap: 0.75rem;
+  }
+
+  .timeline-item {
+    padding: 1rem 1.125rem;
+    border-radius: 12px;
+    min-height: 60px;
+  }
+
+  /* Bank cards on mobile */
+  .bank-card {
+    padding: 1.5rem;
+    border-radius: 16px;
+    min-height: 140px;
+  }
+
+  .bank-name {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .bank-balance {
+    font-size: 1.75rem;
+    margin-top: 0.75rem;
+  }
+
+  /* Filter bar mobile */
+  .filter-bar {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .filter-bar select {
+    min-height: 44px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+  }
+
+  /* View headers */
+  .view-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .view-header h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+  }
+
+  /* Summary bar */
+  .summary-bar {
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .summary-item {
+    min-width: 120px;
+  }
+
+  /* Settings page mobile */
+  .settings-grid {
+    gap: 1rem;
+  }
+
+  .input-group {
+    gap: 0.75rem;
+  }
+
+  .input-group input {
+    flex: 1;
+  }
+
+  /* Goal progress mobile */
+  .goal-hero {
+    padding: 2rem 1.5rem;
+    border-radius: 20px;
+  }
+
+  .goal-target {
+    font-size: 2rem;
+    font-weight: 800;
+  }
+
+  /* Invoice cards */
+  .invoice-card {
+    padding: 1.25rem;
+    border-radius: 14px;
+  }
+
+  /* Team cards */
+  .team-card {
+    padding: 1.25rem;
+    border-radius: 14px;
+  }
+
+  /* Checkbox improvements */
+  input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+  }
+
+  /* Help text and labels */
+  .help-text {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  label {
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+}
+
+/* Small phone optimizations (480px) */
+@media (max-width: 480px) {
+  /* Even more generous spacing */
+  #main-content {
+    padding: 0.875rem;
+    padding-bottom: 6rem;
+  }
+
+  /* Larger buttons on small screens */
+  .btn {
+    min-height: 50px;
+    padding: 1rem 1.25rem;
+    font-weight: 700;
+  }
+
+  /* Single column metric grid */
+  .metric-grid {
+    gap: 0.875rem;
+  }
+
+  .metric-card {
+    padding: 1.5rem;
+  }
+
+  .metric-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+  }
+
+  .metric-label {
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  /* Budget hero even larger */
+  .budget-amount {
+    font-size: 3rem;
+    font-weight: 900;
+  }
+
+  /* Section cards full-width feel */
+  .section-card {
+    margin-left: -0.875rem;
+    margin-right: -0.875rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  /* Mobile nav larger touch targets */
+  .mob-link {
+    min-height: 64px;
+  }
+
+  .mob-link svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Bank cards larger */
+  .bank-balance {
+    font-size: 2rem;
+  }
+
+  /* Chat full screen feel */
+  .chat-container {
+    height: calc(100vh - 120px);
+    border-radius: 0;
+    margin: -0.875rem;
+    margin-bottom: 0;
+  }
+
+  /* Modal full screen */
+  .modal {
+    max-height: 95vh;
+  }
+
+  /* Filter bar stack */
+  .filter-bar select {
+    width: 100%;
+  }
+}
+
+/* Mobile table improvements - convert to card list */
+@media (max-width: 768px) {
+  /* Hide table headers on mobile */
+  .table-wrap table thead {
+    display: none;
+  }
+
+  /* Convert table rows to cards */
+  .table-wrap table,
+  .table-wrap tbody,
+  .table-wrap tr {
+    display: block;
+    width: 100%;
+  }
+
+  .table-wrap tr {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+    padding: 1rem;
+    position: relative;
+  }
+
+  .table-wrap tr:active {
+    transform: scale(0.99);
+    background: var(--bg-card-hover);
+  }
+
+  .table-wrap td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border: none;
+    font-size: 0.9rem;
+  }
+
+  .table-wrap td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-50);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .table-wrap .col-check {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: auto;
+  }
+
+  .table-wrap .col-actions {
+    border-top: 1px solid var(--border);
+    padding-top: 0.75rem;
+    margin-top: 0.5rem;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  .table-wrap .col-actions::before {
+    display: none;
+  }
+}
+
+/* Smooth transitions for everything */
+@media (max-width: 768px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Better scrolling */
+  #main-content,
+  .modal-body,
+  .chat-messages {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* PWA splash screen support */
+@media (display-mode: standalone) {
+  /* Add extra padding for PWA mode */
+  #main-content {
+    padding-top: calc(1rem + env(safe-area-inset-top));
+  }
+
+  .view-header {
+    padding-top: 0.5rem;
+  }
+}
+
+/* Landscape mode mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .daily-budget-hero {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .budget-amount {
+    font-size: 2rem;
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .chat-container {
+    height: calc(100vh - 100px);
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

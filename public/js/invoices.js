@@ -19,13 +19,13 @@ const Invoices = {
         const badgeClass = `badge-${inv.status}`;
         return `
           <tr>
-            <td><strong>${Utils.esc(inv.number)}</strong></td>
-            <td>${Utils.esc(inv.client)}</td>
-            <td class="col-amount">${Utils.money(inv.amount)}</td>
-            <td>${Utils.dateFull(inv.date)}</td>
-            <td>${Utils.dateFull(inv.dueDate)}</td>
-            <td><span class="badge ${badgeClass}">${inv.status}</span></td>
-            <td>
+            <td data-label="Invoice #"><strong>${Utils.esc(inv.number)}</strong></td>
+            <td data-label="Client">${Utils.esc(inv.client)}</td>
+            <td class="col-amount" data-label="Amount">${Utils.money(inv.amount)}</td>
+            <td data-label="Issue Date">${Utils.dateFull(inv.date)}</td>
+            <td data-label="Due Date">${Utils.dateFull(inv.dueDate)}</td>
+            <td data-label="Status"><span class="badge ${badgeClass}">${inv.status}</span></td>
+            <td class="col-actions" data-label="">
               ${inv.status === 'draft' ? `<button class="btn btn-sm btn-cyan" onclick="Invoices.updateStatus('${inv.id}','sent')">Send</button>` : ''}
               ${inv.status === 'sent' ? `<button class="btn btn-sm btn-green" onclick="Invoices.updateStatus('${inv.id}','paid')">Paid</button>` : ''}
               <button class="btn btn-sm" onclick="Invoices.edit('${inv.id}')">Edit</button>
