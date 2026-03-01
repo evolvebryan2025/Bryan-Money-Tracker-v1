@@ -136,5 +136,18 @@ const Chat = {
       container.appendChild(bubble);
     });
     container.scrollTop = container.scrollHeight;
+  },
+
+  askAboutInsight(prompt) {
+    App.navigate('chat');
+
+    // Wait for view to load, then populate input
+    setTimeout(() => {
+      const input = document.getElementById('chat-input');
+      if (input) {
+        input.value = prompt;
+        input.focus();
+      }
+    }, 100);
   }
 };

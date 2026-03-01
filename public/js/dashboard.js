@@ -3,6 +3,9 @@ const Dashboard = {
   render() {
     const data = Budget.calculate();
 
+    // AI Insights
+    this._renderInsights();
+
     // Daily budget hero
     document.getElementById('daily-budget-amount').textContent = Utils.money(data.dailyBudget);
     document.getElementById('daily-budget-sub').textContent =
@@ -24,6 +27,15 @@ const Dashboard = {
       data.overdueBills.length > 0
         ? `${data.overdueBills.length} overdue + ${data.upcomingBills.length} due this week`
         : `${data.upcomingBills.length} bills due this week`;
+
+    // Spent this month metric
+    const spent = Expenses.getTotalSpentThisMonth();
+    document.getElementById('metric-spent').textContent = Utils.money(spent.total);
+    document.getElementById('metric-spent-sub').textContent =
+      `₱${spent.bills.toLocaleString()} bills + ₱${spent.expenses.toLocaleString()} expenses`;
+
+    // Populate bank selector for quick expense form
+    Expenses.populateBankSelector();
 
     // Upcoming bills timeline
     this._renderTimeline(data);
@@ -50,6 +62,38 @@ const Dashboard = {
           <span class="t-name">${Utils.esc(bill.name)}</span>
           <span class="t-amount">${Utils.money(bill.amount)}</span>
           <span class="t-date">${label}</span>
+        </div>`;
+    }).join('');
+  },
+
+  _renderInsights() {
+    const container = document.getElementById('ai-insights-container');
+    if (!container) return;
+
+    const insights = Insights.generate();
+
+    if (insights.length === 0) {
+      container.innerHTML = '';
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'grid';
+    container.innerHTML = insights.map(insight => {
+      const typeClass = insight.type === 'danger' ? 'insight-danger' :
+                        insight.type === 'warning' ? 'insight-warning' : 'insight-info';
+
+      return `
+        <div class="insight-card ${typeClass}">
+          <div class="insight-icon">${insight.icon}</div>
+          <div class="insight-content">
+            <h4 class="insight-title">${Utils.esc(insight.title)}</h4>
+            <p class="insight-message">${Utils.esc(insight.message)}</p>
+            <div class="insight-actions">
+              <button class="btn btn-sm" onclick="App.navigate('${insight.actionFn.toString().match(/navigate\('(.+?)'\)/)?.[1] || 'dashboard'}')}">${insight.action}</button>
+              <button class="btn btn-sm btn-cyan" onclick="Chat.askAboutInsight(\`${insight.chatPrompt.replace(/`/g, '\\`')}\`)">Ask AI</button>
+            </div>
+          </div>
         </div>`;
     }).join('');
   },

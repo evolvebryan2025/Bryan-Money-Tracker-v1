@@ -51,6 +51,41 @@ const Storage = {
     this.saveIncomes(this.getIncomes().filter(i => i.id !== id));
   },
 
+  // --- Expenses (daily/adhoc spending) ---
+  getExpenses() { return this._get('expenses') || []; },
+  saveExpenses(expenses) { this._set('expenses', expenses); },
+  addExpense(expense) {
+    const expenses = this.getExpenses();
+    expense.id = expense.id || Utils.uid();
+    expense.createdAt = expense.createdAt || new Date().toISOString();
+    expenses.unshift(expense); // Most recent first
+    this.saveExpenses(expenses);
+
+    // Deduct from bank account if specified
+    if (expense.bankId) {
+      const bank = this.getBanks().find(b => b.id === expense.bankId);
+      if (bank) {
+        this.updateBank(expense.bankId, bank.balance - expense.amount);
+        this.addBankTxn({
+          type: 'expense',
+          bankId: expense.bankId,
+          amount: -expense.amount,
+          description: expense.name,
+          category: expense.category
+        });
+      }
+    }
+
+    return expense;
+  },
+  updateExpense(id, updates) {
+    const expenses = this.getExpenses().map(e => e.id === id ? { ...e, ...updates } : e);
+    this.saveExpenses(expenses);
+  },
+  deleteExpense(id) {
+    this.saveExpenses(this.getExpenses().filter(e => e.id !== id));
+  },
+
   // --- Banks ---
   getBanks() {
     return this._get('banks') || [
@@ -162,6 +197,7 @@ const Storage = {
     return {
       bills: this.getBills(),
       incomes: this.getIncomes(),
+      expenses: this.getExpenses(),
       banks: this.getBanks(),
       bankTxns: this.getBankTxns(),
       team: this.getTeam(),
@@ -179,6 +215,7 @@ const Storage = {
   importAll(data) {
     if (data.bills) this.saveBills(data.bills);
     if (data.incomes) this.saveIncomes(data.incomes);
+    if (data.expenses) this.saveExpenses(data.expenses);
     if (data.banks) this.saveBanks(data.banks);
     if (data.bankTxns) this._set('bank_txns', data.bankTxns);
     if (data.team) this.saveTeam(data.team);

@@ -50,10 +50,11 @@ const Bills = {
           (days !== null && days === 0) ? 'row-due-today' : '';
         const badgeClass = b.status === 'paid' ? 'badge-paid' :
           b.status === 'overdue' ? 'badge-overdue' : 'badge-unpaid';
+        const urgencyClass = Notifications.getUrgencyClass(b);
         const checked = this._selected.has(b.id) ? 'checked' : '';
 
         return `
-          <tr class="${rowClass} ${checked ? 'row-selected' : ''}">
+          <tr class="${rowClass} ${urgencyClass} ${checked ? 'row-selected' : ''}">
             <td class="col-check"><input type="checkbox" ${checked} onchange="Bills.toggleOne('${b.id}', this.checked)" title="Select bill"></td>
             <td><strong>${Utils.esc(b.name)}</strong></td>
             <td>${Utils.esc(b.category || '--')}</td>
@@ -169,6 +170,7 @@ const Bills = {
   markPaid(id) {
     Storage.updateBill(id, { status: 'paid' });
     Storage.saveMonthlySnapshot();
+    Insights.invalidateCache();
     this.render();
     Dashboard.render();
   },
@@ -243,6 +245,7 @@ const Bills = {
     }
 
     Storage.saveMonthlySnapshot();
+    Insights.invalidateCache();
     App.closeModal();
     this.render();
     Dashboard.render();

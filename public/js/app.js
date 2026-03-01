@@ -77,6 +77,8 @@ const App = {
 
     // Init modules
     Chat.init();
+    PWA.init();
+    Notifications.init();
 
     // Set up navigation
     this._setupNav();
@@ -160,6 +162,7 @@ const App = {
     switch (view) {
       case 'dashboard': Dashboard.render(); break;
       case 'bills': Bills.render(); break;
+      case 'timeline': Timeline.render(); break;
       case 'income': Income.render(); break;
       case 'banks': Banks.render(); break;
       case 'team': Team.render(); break;

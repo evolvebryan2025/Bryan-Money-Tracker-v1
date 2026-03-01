@@ -4,10 +4,17 @@ const Budget = {
     const bills = Storage.getBills();
     const incomes = Storage.getIncomes();
     const banks = Storage.getBanks();
+    const expenses = Storage.getExpenses ? Storage.getExpenses() : [];
 
     const totalBills = bills.reduce((s, b) => s + (Number(b.amount) || 0), 0);
     const totalIncome = incomes.reduce((s, i) => s + (Number(i.amount) || 0), 0);
     const totalCash = banks.reduce((s, b) => s + (Number(b.balance) || 0), 0);
+
+    // Calculate expenses this month
+    const currentMonth = Utils.currentMonthKey();
+    const monthExpenses = expenses
+      .filter(e => e.date && e.date.startsWith(currentMonth))
+      .reduce((s, e) => s + e.amount, 0);
 
     const unpaidBills = bills.filter(b => b.status !== 'paid');
     const totalUnpaid = unpaidBills.reduce((s, b) => s + (Number(b.amount) || 0), 0);
@@ -33,13 +40,17 @@ const Budget = {
     });
     const overdueTotal = overdueBills.reduce((s, b) => s + (Number(b.amount) || 0), 0);
 
-    // Daily budget = (cash on hand - upcoming 7-day bills - overdue) / max(daysLeft, 1)
+    // Daily budget = (cash on hand - upcoming 7-day bills - overdue - expenses already spent) / max(daysLeft, 1)
     const daysLeft = Math.max(Utils.daysLeftInMonth(), 1);
     const safeToSpend = Math.max(totalCash - upcomingTotal - overdueTotal, 0);
     const dailyBudget = Math.floor(safeToSpend / daysLeft);
 
     // Next expected income
     const nextIncome = this._findNextIncome(incomes);
+
+    const billsPaidThisMonth = bills
+      .filter(b => b.status === 'paid' && b.dueDate && b.dueDate.startsWith(currentMonth))
+      .reduce((s, b) => s + b.amount, 0);
 
     return {
       totalBills,
@@ -54,6 +65,8 @@ const Budget = {
       dailyBudget,
       safeToSpend,
       nextIncome,
+      monthExpenses,
+      totalSpent: billsPaidThisMonth + monthExpenses,
       profit: totalIncome - totalBills,
       savingsRate: totalIncome > 0 ? ((totalIncome - totalBills) / totalIncome * 100).toFixed(1) : 0
     };
