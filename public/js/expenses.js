@@ -9,7 +9,12 @@ const Expenses = {
     const bankId = document.getElementById('quick-expense-bank').value;
 
     if (!name || !amount || !category || !bankId) {
-      alert('Please fill all fields');
+      Toast.show('Please fill all fields', 'error');
+      return;
+    }
+
+    if (amount <= 0) {
+      Toast.show('Amount must be greater than 0', 'error');
       return;
     }
 
@@ -37,9 +42,61 @@ const Expenses = {
       btn.disabled = false;
     }, 1500);
 
+    Toast.show(`Tracked: ${name} - ₱${amount.toLocaleString()}`, 'success');
+
     // Refresh views
     Dashboard.render();
     Banks.render();
+    this.render();
+  },
+
+  render() {
+    const container = document.getElementById('recent-expenses-list');
+    if (!container) return;
+
+    const expenses = Storage.getExpenses();
+    const currentMonth = Utils.currentMonthKey();
+    const recentExpenses = expenses
+      .filter(e => e.date && e.date.startsWith(currentMonth))
+      .slice(0, 10);
+
+    if (recentExpenses.length === 0) {
+      container.innerHTML = '<p class="empty-state">No expenses tracked this month</p>';
+      return;
+    }
+
+    const categoryIcons = {
+      food: '🍔',
+      transport: '🚗',
+      tools: '🛠️',
+      personal: '👤',
+      other: '📦'
+    };
+
+    container.innerHTML = recentExpenses.map(e => {
+      const icon = categoryIcons[e.category] || '📦';
+      const bank = Storage.getBanks().find(b => b.id === e.bankId);
+      const bankName = bank ? bank.name : '';
+      return `
+        <div class="expense-item">
+          <div class="expense-icon">${icon}</div>
+          <div class="expense-info">
+            <span class="expense-name">${Utils.esc(e.name)}</span>
+            <span class="expense-meta">${Utils.dateStr(e.date)}${bankName ? ' · ' + Utils.esc(bankName) : ''}</span>
+          </div>
+          <div class="expense-amount">-${Utils.money(e.amount)}</div>
+          <button class="btn btn-sm btn-red expense-delete" onclick="Expenses.remove('${e.id}')" title="Delete">×</button>
+        </div>`;
+    }).join('');
+  },
+
+  remove(id) {
+    if (confirm('Delete this expense?')) {
+      Storage.deleteExpense(id);
+      this.render();
+      Dashboard.render();
+      Toast.show('Expense deleted', 'success');
+    }
   },
 
   populateBankSelector() {

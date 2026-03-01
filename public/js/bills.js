@@ -236,12 +236,15 @@ const Bills = {
     const category = document.getElementById('bill-category').value;
     const recurring = document.getElementById('bill-recurring').checked;
 
-    if (!name) { alert('Name is required'); return; }
+    if (!name) { Toast.show('Name is required', 'error'); return; }
+    if (amount <= 0 && !existingId) { Toast.show('Amount must be greater than 0', 'error'); return; }
 
     if (existingId) {
       Storage.updateBill(existingId, { name, amount, dueDate, category, recurring });
+      Toast.show('Bill updated', 'success');
     } else {
       Storage.addBill({ name, amount, dueDate, category, recurring, status: 'unpaid' });
+      Toast.show(`Bill added: ${name}`, 'success');
     }
 
     Storage.saveMonthlySnapshot();

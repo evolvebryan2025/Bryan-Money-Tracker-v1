@@ -104,13 +104,15 @@ const Invoices = {
     const dueDate = document.getElementById('inv-due').value;
     const description = document.getElementById('inv-desc').value.trim();
 
-    if (!client) { alert('Client is required'); return; }
-    if (!amount) { alert('Amount is required'); return; }
+    if (!client) { Toast.show('Client is required', 'error'); return; }
+    if (!amount || amount <= 0) { Toast.show('Amount is required', 'error'); return; }
 
     if (existingId) {
       Storage.updateInvoice(existingId, { client, amount, date, dueDate, description });
+      Toast.show('Invoice updated', 'success');
     } else {
       Storage.addInvoice({ client, amount, date, dueDate, description, status: 'draft' });
+      Toast.show(`Invoice created for ${client}`, 'success');
     }
 
     App.closeModal();

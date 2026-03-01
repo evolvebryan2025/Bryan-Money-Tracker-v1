@@ -37,6 +37,9 @@ const Dashboard = {
     // Populate bank selector for quick expense form
     Expenses.populateBankSelector();
 
+    // Recent expenses list
+    Expenses.render();
+
     // Upcoming bills timeline
     this._renderTimeline(data);
 
@@ -83,6 +86,11 @@ const Dashboard = {
       const typeClass = insight.type === 'danger' ? 'insight-danger' :
                         insight.type === 'warning' ? 'insight-warning' : 'insight-info';
 
+      // Extract navigation target safely
+      const navTarget = (insight.actionFn.toString().match(/navigate\('([^']+)'\)/) || [])[1] || 'dashboard';
+      // Escape chat prompt for use in HTML attribute
+      const safePrompt = Utils.esc(insight.chatPrompt || '');
+
       return `
         <div class="insight-card ${typeClass}">
           <div class="insight-icon">${insight.icon}</div>
@@ -90,8 +98,8 @@ const Dashboard = {
             <h4 class="insight-title">${Utils.esc(insight.title)}</h4>
             <p class="insight-message">${Utils.esc(insight.message)}</p>
             <div class="insight-actions">
-              <button class="btn btn-sm" onclick="App.navigate('${insight.actionFn.toString().match(/navigate\('(.+?)'\)/)?.[1] || 'dashboard'}')}">${insight.action}</button>
-              <button class="btn btn-sm btn-cyan" onclick="Chat.askAboutInsight(\`${insight.chatPrompt.replace(/`/g, '\\`')}\`)">Ask AI</button>
+              <button class="btn btn-sm" onclick="App.navigate('${navTarget}')">${insight.action}</button>
+              <button class="btn btn-sm btn-cyan" onclick="Chat.askAboutInsight('${safePrompt.replace(/'/g, "\\'")}')">Ask AI</button>
             </div>
           </div>
         </div>`;

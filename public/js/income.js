@@ -116,12 +116,15 @@ const Income = {
     const nextDate = document.getElementById('income-next').value || null;
     const note = document.getElementById('income-note').value.trim();
 
-    if (!name) { alert('Client name is required'); return; }
+    if (!name) { Toast.show('Client name is required', 'error'); return; }
+    if (amount <= 0 && !existingId) { Toast.show('Amount must be greater than 0', 'error'); return; }
 
     if (existingId) {
       Storage.updateIncome(existingId, { name, amount, schedule, nextDate, note });
+      Toast.show('Income updated', 'success');
     } else {
       Storage.addIncome({ name, amount, schedule, nextDate, note, status: 'expected' });
+      Toast.show(`Income added: ${name}`, 'success');
     }
 
     Storage.saveMonthlySnapshot();

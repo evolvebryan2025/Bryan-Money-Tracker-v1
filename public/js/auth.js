@@ -212,8 +212,6 @@ const Auth = {
   // Utility to generate password hash (for creating new users)
   async generatePasswordHash(password) {
     const hash = await this._hashPassword(password);
-    console.log(`Password: ${password}`);
-    console.log(`Hash: ${hash}`);
     return hash;
   }
 };

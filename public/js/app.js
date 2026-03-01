@@ -1,3 +1,39 @@
+// ===== TOAST NOTIFICATION SYSTEM =====
+const Toast = {
+  show(message, type = 'info', duration = 3000) {
+    // Create toast container if it doesn't exist
+    let container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      container.className = 'toast-container';
+      document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+    toast.innerHTML = `
+      <span class="toast-icon">${icons[type] || icons.info}</span>
+      <span class="toast-message">${message}</span>
+      <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+    `;
+
+    container.appendChild(toast);
+
+    // Trigger animation
+    requestAnimationFrame(() => toast.classList.add('toast-show'));
+
+    // Auto-remove
+    setTimeout(() => {
+      toast.classList.remove('toast-show');
+      toast.classList.add('toast-hide');
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  }
+};
+
 // ===== REAL-TIME CLOCK =====
 const Clock = {
   _interval: null,
@@ -216,22 +252,27 @@ const Settings = {
     const goal = Storage.getSetting('goal') || 1120000;
     const currency = Storage.getSetting('currency') || 'PHP';
     const firebaseConfig = Storage.getSetting('firebase_config');
+    const notifEnabled = Storage.getSetting('notifications_enabled');
 
     const goalEl = document.getElementById('settings-goal');
     const curEl = document.getElementById('settings-currency');
     const configEl = document.getElementById('firebase-config');
+    const notifToggle = document.getElementById('notifications-toggle');
 
     if (goalEl) goalEl.value = goal;
     if (curEl) curEl.value = currency;
     if (configEl && firebaseConfig) {
-      configEl.value = JSON.stringify(JSON.parse(firebaseConfig), null, 2);
+      try { configEl.value = JSON.stringify(JSON.parse(firebaseConfig), null, 2); } catch (e) { configEl.value = firebaseConfig; }
+    }
+    if (notifToggle) {
+      notifToggle.checked = notifEnabled !== false && ('Notification' in window) && Notification.permission === 'granted';
     }
   },
 
   saveGoal() {
     const goal = Number(document.getElementById('settings-goal').value) || 1120000;
     Storage.setSetting('goal', goal);
-    alert('Goal saved!');
+    Toast.show('Goal saved!', 'success');
     Goals.render();
   },
 
@@ -326,7 +367,7 @@ const Settings = {
         Storage.resetAll();
         Storage.seedIfEmpty();
         App.refreshAll();
-        alert('All data has been reset.');
+        Toast.show('All data has been reset.', 'warning');
       }
     }
   }

@@ -22,11 +22,11 @@ const Exports = {
         const data = JSON.parse(e.target.result);
         if (confirm('This will merge imported data with your current data. Continue?')) {
           Storage.importAll(data);
-          alert('Data imported successfully!');
+          Toast.show('Data imported successfully!', 'success');
           App.refreshAll();
         }
       } catch {
-        alert('Invalid JSON file.');
+        Toast.show('Invalid JSON file.', 'error');
       }
     };
     reader.readAsText(file);

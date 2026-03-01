@@ -73,9 +73,10 @@ const Team = {
     const salary = Number(document.getElementById('team-salary').value) || 0;
     const payDate = Number(document.getElementById('team-paydate').value) || null;
 
-    if (!name) { alert('Name is required'); return; }
+    if (!name) { Toast.show('Name is required', 'error'); return; }
 
     Storage.addTeamMember({ name, role, salary, payDate });
+    Toast.show(`Team member added: ${name}`, 'success');
     App.closeModal();
     this.render();
     Dashboard.render();

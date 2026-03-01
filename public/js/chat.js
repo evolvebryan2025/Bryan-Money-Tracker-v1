@@ -63,7 +63,7 @@ const Chat = {
         };
         reader.readAsDataURL(file);
       } else {
-        alert('Only image files are supported for now.');
+        Toast.show('Only image files are supported for now.', 'warning');
       }
     });
 
@@ -129,6 +129,10 @@ const Chat = {
     }
 
     this.messages.push(messageObj);
+    // Limit chat history to prevent memory bloat
+    if (this.messages.length > 100) {
+      this.messages = this.messages.slice(-100);
+    }
     Storage.saveChatHistory(this.messages);
 
     const container = document.getElementById('chat-messages');
@@ -234,6 +238,10 @@ const Chat = {
         })
       });
 
+      if (!res.ok) {
+        throw new Error(`Server error (${res.status}). Make sure the server is running.`);
+      }
+
       const data = await res.json();
 
       // Remove typing indicator
@@ -326,7 +334,7 @@ const Chat = {
 
       case 'add_expense':
         Storage.addExpense(result.data);
-        Expenses.render();
+        if (typeof Expenses.render === 'function') Expenses.render();
         Dashboard.render();
         Insights.invalidateCache();
         break;
@@ -342,10 +350,36 @@ const Chat = {
   },
 
   async _continueAfterTool() {
-    // This function continues the conversation after tool execution
-    // The backend will see the tool result and provide a final response
-    // For now, we'll skip this to avoid infinite loops
-    // The tool execution message is sufficient
+    try {
+      const financialContext = Budget.getFinancialContext();
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          financialContext,
+          messages: this.messages.map(m => ({
+            role: m.role,
+            content: m.content
+          })),
+          currentData: {
+            bills: Storage.getBills(),
+            incomes: Storage.getIncomes(),
+            expenses: Storage.getExpenses ? Storage.getExpenses() : [],
+            banks: Storage.getBanks()
+          }
+        })
+      });
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+      if (data.response && !data.toolUse) {
+        this._addMessage('assistant', data.response);
+      }
+    } catch (err) {
+      // Silent fail - the tool execution message is sufficient
+      console.log('[Chat] Continue after tool skipped:', err.message);
+    }
   },
 
   _renderHistory() {
