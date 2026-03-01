@@ -1,10 +1,10 @@
 // ===== AUTHENTICATION MODULE =====
 const Auth = {
-  // Default credentials (username: admin, password: bryan2025)
+  // Default credentials (username: bryansumait, password: bryansumait03)
   // Password is SHA-256 hashed for basic security
   CREDENTIALS: {
-    username: 'admin',
-    passwordHash: '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92' // "bryan2025"
+    username: 'bryansumait',
+    passwordHash: '264bc2006a1a5388e5b8f78bb8a3ac1ab624889c2006cd4570354a04186864ed' // "bryansumait03"
   },
 
   init() {
@@ -160,7 +160,7 @@ const Auth = {
         </form>
 
         <div class="login-footer">
-          <p class="login-hint">💡 Default: <code>admin</code> / <code>bryan2025</code></p>
+          <p class="login-hint">💡 Login: <code>bryansumait</code> / <code>bryansumait03</code></p>
           <p class="login-version">v2.0 • Enhanced Edition</p>
         </div>
       </div>
