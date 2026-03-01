@@ -2929,3 +2929,82 @@ canvas {
     transform: translateX(-50%) translateY(0);
   }
 }
+
+/* ===== FIREBASE CONFIG STYLES ===== */
+
+.firebase-config-section {
+  margin-top: 1rem;
+}
+
+.firebase-config-section label {
+  display: block;
+  color: var(--text-70);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.firebase-config-section textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.875rem;
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  resize: vertical;
+  min-height: 150px;
+  margin-bottom: 0.75rem;
+  box-sizing: border-box;
+}
+
+.firebase-config-section textarea:focus {
+  outline: none;
+  border-color: var(--cyan);
+  background: rgba(0, 212, 255, 0.05);
+}
+
+.firebase-config-section textarea::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.8rem;
+}
+
+.sync-status {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  display: none;
+}
+
+.sync-status.success {
+  display: block;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: var(--green);
+}
+
+.sync-status.error {
+  display: block;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--red);
+}
+
+.sync-status.info {
+  display: block;
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  color: var(--cyan);
+}
+
+.link-cyan {
+  color: var(--cyan);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.link-cyan:hover {
+  text-decoration: underline;
+}

@@ -501,6 +501,29 @@
 
       <div class="settings-grid">
         <div class="section-card">
+          <h3>☁️ Cloud Sync (Firebase)</h3>
+          <p class="help-text">Sync your data across all devices. <a href="https://github.com/evolvebryan2025/Bryan-Money-Tracker-v1/blob/main/FIREBASE_SETUP.md" target="_blank" rel="noopener noreferrer" class="link-cyan">Setup Guide →</a></p>
+          <div class="firebase-config-section">
+            <label for="firebase-config">Firebase Config (JSON):</label>
+            <textarea id="firebase-config" rows="8" placeholder='Paste your Firebase config here, e.g.:
+{
+  "apiKey": "AIza...",
+  "authDomain": "your-project.firebaseapp.com",
+  "databaseURL": "https://your-project.firebaseio.com",
+  "projectId": "your-project",
+  "storageBucket": "your-project.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123456789:web:abc123"
+}'></textarea>
+            <div class="btn-group">
+              <button type="button" class="btn btn-cyan" onclick="Settings.saveFirebaseConfig()">💾 Save & Enable Sync</button>
+              <button type="button" class="btn btn-sm" onclick="Settings.testFirebaseSync()">🔄 Test Sync</button>
+            </div>
+            <p class="sync-status" id="sync-status"></p>
+          </div>
+        </div>
+
+        <div class="section-card">
           <h3>AI Advisor</h3>
           <p class="help-text">The AI chat uses the API key from your server's <code>.env</code> file. Set <code>ANTHROPIC_API_KEY</code> there and restart the server.</p>
         </div>

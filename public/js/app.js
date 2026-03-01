@@ -215,12 +215,17 @@ const Settings = {
   load() {
     const goal = Storage.getSetting('goal') || 1120000;
     const currency = Storage.getSetting('currency') || 'PHP';
+    const firebaseConfig = Storage.getSetting('firebase_config');
 
     const goalEl = document.getElementById('settings-goal');
     const curEl = document.getElementById('settings-currency');
+    const configEl = document.getElementById('firebase-config');
 
     if (goalEl) goalEl.value = goal;
     if (curEl) curEl.value = currency;
+    if (configEl && firebaseConfig) {
+      configEl.value = JSON.stringify(JSON.parse(firebaseConfig), null, 2);
+    }
   },
 
   saveGoal() {
@@ -233,6 +238,86 @@ const Settings = {
   saveCurrency() {
     const cur = document.getElementById('settings-currency').value;
     Storage.setSetting('currency', cur);
+  },
+
+  async saveFirebaseConfig() {
+    const configText = document.getElementById('firebase-config').value.trim();
+    const statusEl = document.getElementById('sync-status');
+
+    if (!configText) {
+      statusEl.textContent = '❌ Please paste your Firebase config JSON';
+      statusEl.className = 'sync-status error';
+      return;
+    }
+
+    try {
+      // Validate JSON
+      const config = JSON.parse(configText);
+
+      // Validate required Firebase fields
+      const required = ['apiKey', 'authDomain', 'databaseURL', 'projectId'];
+      const missing = required.filter(field => !config[field]);
+
+      if (missing.length > 0) {
+        statusEl.textContent = `❌ Missing required fields: ${missing.join(', ')}`;
+        statusEl.className = 'sync-status error';
+        return;
+      }
+
+      // Save config
+      Storage.setSetting('firebase_config', configText);
+
+      // Reinitialize CloudSync
+      if (typeof CloudSync !== 'undefined') {
+        CloudSync.disconnect();
+        await CloudSync.init();
+
+        if (CloudSync.isEnabled) {
+          statusEl.textContent = '✅ Firebase config saved! Cloud sync is now enabled.';
+          statusEl.className = 'sync-status success';
+        } else {
+          statusEl.textContent = '⚠️ Config saved but sync failed to initialize. Check console for errors.';
+          statusEl.className = 'sync-status error';
+        }
+      } else {
+        statusEl.textContent = '⚠️ Config saved but CloudSync module not loaded.';
+        statusEl.className = 'sync-status error';
+      }
+    } catch (err) {
+      statusEl.textContent = `❌ Invalid JSON: ${err.message}`;
+      statusEl.className = 'sync-status error';
+    }
+  },
+
+  async testFirebaseSync() {
+    const statusEl = document.getElementById('sync-status');
+
+    if (typeof CloudSync === 'undefined') {
+      statusEl.textContent = '❌ CloudSync module not loaded';
+      statusEl.className = 'sync-status error';
+      return;
+    }
+
+    if (!CloudSync.isEnabled) {
+      statusEl.textContent = '❌ Cloud sync is not enabled. Save your Firebase config first.';
+      statusEl.className = 'sync-status error';
+      return;
+    }
+
+    try {
+      statusEl.textContent = '🔄 Testing sync...';
+      statusEl.className = 'sync-status info';
+
+      // Try pushing test data
+      await CloudSync.pushToCloud('_test', { timestamp: Date.now() });
+
+      statusEl.textContent = '✅ Sync test successful! Your data will sync across devices.';
+      statusEl.className = 'sync-status success';
+    } catch (err) {
+      statusEl.textContent = `❌ Sync test failed: ${err.message}`;
+      statusEl.className = 'sync-status error';
+      console.error('[Settings] Sync test error:', err);
+    }
   },
 
   resetData() {

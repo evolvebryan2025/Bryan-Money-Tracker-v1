@@ -57,10 +57,15 @@ const CloudSync = {
     // Check if config is in settings
     const savedConfig = Storage.getSetting('firebase_config');
     if (savedConfig) {
-      return JSON.parse(savedConfig);
+      try {
+        return JSON.parse(savedConfig);
+      } catch (err) {
+        console.error('[Sync] Invalid Firebase config JSON:', err);
+        return null;
+      }
     }
 
-    // Default config (will be set via Settings)
+    // No config found - user needs to add it via Settings
     return null;
   },
 
