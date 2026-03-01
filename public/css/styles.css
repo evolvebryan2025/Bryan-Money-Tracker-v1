@@ -62,7 +62,10 @@
   --radius-sm: 8px;
 }
 
-html { font-size: 15px; }
+html {
+  font-size: 15px;
+  color-scheme: dark;
+}
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
@@ -551,6 +554,37 @@ select, textarea {
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
+
+/* Force dark theme for native select pickers (mobile browsers) */
+select {
+  color-scheme: dark;
+  background-color: #141414;
+}
+
+/* Style option elements for desktop and Android */
+select option {
+  background: #141414;
+  color: rgba(255,255,255,0.85);
+  padding: 0.5rem 0.75rem;
+}
+
+select option:checked,
+select option:hover {
+  background: #1f1f1f;
+  color: #fff;
+}
+
+/* Disabled/placeholder option */
+select option[value=""] {
+  color: rgba(255,255,255,0.35);
+}
+
+select optgroup {
+  background: #141414;
+  color: var(--red);
+  font-weight: 600;
+}
+
 input:focus, select:focus, textarea:focus {
   border-color: var(--red-25);
   box-shadow: 0 0 0 3px var(--red-08);
@@ -1267,12 +1301,18 @@ canvas {
 
 .expense-form-grid input,
 .expense-form-grid select {
-  background: var(--bg-input);
+  background-color: #141414;
   border: 1px solid var(--border);
   color: var(--text);
   padding: 0.75rem 1rem;
   border-radius: var(--radius-sm);
   font-size: 0.9rem;
+  color-scheme: dark;
+}
+
+.expense-form-grid select option {
+  background: #141414;
+  color: rgba(255,255,255,0.85);
 }
 
 .expense-form-grid input:focus,
