@@ -2885,3 +2885,47 @@ canvas {
     animation: none;
   }
 }
+
+/* ===== CLOUD SYNC NOTIFICATION ===== */
+
+.sync-notification {
+  position: fixed;
+  bottom: 80px;
+  right: -300px;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.95), rgba(0, 150, 199, 0.95));
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 10001;
+  box-shadow: 0 8px 32px rgba(0, 212, 255, 0.4);
+  transition: right 0.3s ease;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.sync-notification.show {
+  right: 1rem;
+}
+
+.sync-notification span {
+  font-size: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .sync-notification {
+    bottom: 70px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) translateY(100px);
+    max-width: calc(100% - 2rem);
+  }
+
+  .sync-notification.show {
+    transform: translateX(-50%) translateY(0);
+  }
+}

@@ -15,7 +15,12 @@ const Storage = {
 
   // --- Bills ---
   getBills() { return this._get('bills') || []; },
-  saveBills(bills) { this._set('bills', bills); },
+  saveBills(bills) {
+    this._set('bills', bills);
+    if (typeof CloudSync !== 'undefined' && CloudSync.isEnabled) {
+      CloudSync.pushToCloud('bills', bills);
+    }
+  },
   addBill(bill) {
     const bills = this.getBills();
     bill.id = bill.id || Utils.uid();
@@ -34,7 +39,12 @@ const Storage = {
 
   // --- Income ---
   getIncomes() { return this._get('incomes') || []; },
-  saveIncomes(incomes) { this._set('incomes', incomes); },
+  saveIncomes(incomes) {
+    this._set('incomes', incomes);
+    if (typeof CloudSync !== 'undefined' && CloudSync.isEnabled) {
+      CloudSync.pushToCloud('incomes', incomes);
+    }
+  },
   addIncome(income) {
     const incomes = this.getIncomes();
     income.id = income.id || Utils.uid();
@@ -53,7 +63,12 @@ const Storage = {
 
   // --- Expenses (daily/adhoc spending) ---
   getExpenses() { return this._get('expenses') || []; },
-  saveExpenses(expenses) { this._set('expenses', expenses); },
+  saveExpenses(expenses) {
+    this._set('expenses', expenses);
+    if (typeof CloudSync !== 'undefined' && CloudSync.isEnabled) {
+      CloudSync.pushToCloud('expenses', expenses);
+    }
+  },
   addExpense(expense) {
     const expenses = this.getExpenses();
     expense.id = expense.id || Utils.uid();
@@ -99,7 +114,12 @@ const Storage = {
       { id: 'cash', name: 'Cash', balance: 0, currency: 'PHP' }
     ];
   },
-  saveBanks(banks) { this._set('banks', banks); },
+  saveBanks(banks) {
+    this._set('banks', banks);
+    if (typeof CloudSync !== 'undefined' && CloudSync.isEnabled) {
+      CloudSync.pushToCloud('banks', banks);
+    }
+  },
   updateBank(id, balance) {
     const banks = this.getBanks().map(b => b.id === id ? { ...b, balance: Number(balance) } : b);
     this.saveBanks(banks);

@@ -79,6 +79,7 @@ const App = {
     Chat.init();
     PWA.init();
     Notifications.init();
+    CloudSync.init();
 
     // Set up navigation
     this._setupNav();
