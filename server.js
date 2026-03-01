@@ -18,7 +18,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json({ limit: '1mb' }));
+// Increased limit to support image uploads
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Simple rate limiter: max 20 requests per minute per IP
@@ -50,7 +51,119 @@ setInterval(() => {
   }
 }, 300000);
 
-// AI Chat proxy endpoint
+// Tool definitions for data manipulation
+const TOOLS = [
+  {
+    name: 'add_bill',
+    description: 'Add a new bill to the system. Use this when the user wants to add a bill they need to pay.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Name of the bill (e.g., "Electric Bill", "Internet")' },
+        amount: { type: 'number', description: 'Amount in PHP' },
+        dueDate: { type: 'string', description: 'Due date in YYYY-MM-DD format' },
+        category: { type: 'string', description: 'Category: utilities, subscriptions, rent, insurance, loan, tax, or other' },
+        recurring: { type: 'boolean', description: 'Whether this bill repeats monthly' }
+      },
+      required: ['name', 'amount', 'dueDate', 'category']
+    }
+  },
+  {
+    name: 'update_bill',
+    description: 'Update an existing bill. Use this when the user wants to change bill details.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        billId: { type: 'string', description: 'ID of the bill to update' },
+        updates: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            amount: { type: 'number' },
+            dueDate: { type: 'string' },
+            category: { type: 'string' },
+            status: { type: 'string', enum: ['unpaid', 'paid', 'overdue'] }
+          }
+        }
+      },
+      required: ['billId', 'updates']
+    }
+  },
+  {
+    name: 'mark_bill_paid',
+    description: 'Mark a bill as paid. Use when user confirms they have paid a bill.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        billId: { type: 'string', description: 'ID of the bill to mark as paid' }
+      },
+      required: ['billId']
+    }
+  },
+  {
+    name: 'delete_bill',
+    description: 'Delete a bill from the system. Use with caution.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        billId: { type: 'string', description: 'ID of the bill to delete' }
+      },
+      required: ['billId']
+    }
+  },
+  {
+    name: 'add_income',
+    description: 'Add an income source. Use when user mentions receiving money or a new client.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Name of income source (e.g., "Client ABC Payment", "Freelance Project")' },
+        amount: { type: 'number', description: 'Amount in PHP' },
+        nextDate: { type: 'string', description: 'Expected date in YYYY-MM-DD format' },
+        recurring: { type: 'boolean', description: 'Whether this income repeats monthly' }
+      },
+      required: ['name', 'amount', 'nextDate']
+    }
+  },
+  {
+    name: 'add_expense',
+    description: 'Add a one-time expense. Use when user mentions spending money on something.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'What was purchased (e.g., "Lunch", "Gas", "Office Supplies")' },
+        amount: { type: 'number', description: 'Amount spent in PHP' },
+        category: { type: 'string', enum: ['food', 'transport', 'tools', 'personal', 'other'], description: 'Expense category' },
+        bankId: { type: 'string', description: 'Bank account used (gcash, bpi, maya, etc.) - optional' },
+        date: { type: 'string', description: 'Date of expense in YYYY-MM-DD format (defaults to today)' }
+      },
+      required: ['name', 'amount', 'category']
+    }
+  },
+  {
+    name: 'update_bank_balance',
+    description: 'Update a bank account balance. Use when user mentions their current balance.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        bankId: { type: 'string', description: 'Bank ID (gcash, bpi, maya, etc.)' },
+        balance: { type: 'number', description: 'New balance in PHP' }
+      },
+      required: ['bankId', 'balance']
+    }
+  },
+  {
+    name: 'get_bills',
+    description: 'Get list of all bills. Use when you need to see current bills before updating them.',
+    input_schema: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
+  }
+];
+
+// AI Chat proxy endpoint with tool support
 app.post('/api/chat', rateLimit, async (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
@@ -64,22 +177,56 @@ app.post('/api/chat', rateLimit, async (req, res) => {
 
   try {
     const client = new Anthropic({ apiKey });
-
     const systemPrompt = buildSystemPrompt(req.body.financialContext);
 
-    // Validate messages array
+    // Validate and prepare messages (support text and images)
     const messages = Array.isArray(req.body.messages) ? req.body.messages : [];
     const sanitizedMessages = messages
-      .filter(m => m && typeof m.role === 'string' && typeof m.content === 'string')
-      .map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content.slice(0, 10000) }));
+      .filter(m => m && typeof m.role === 'string')
+      .map(m => {
+        if (m.role === 'assistant' || m.role === 'user') {
+          // Support both simple text and multi-content messages
+          if (typeof m.content === 'string') {
+            return { role: m.role, content: m.content.slice(0, 10000) };
+          } else if (Array.isArray(m.content)) {
+            // Multi-content message (text + images)
+            return { role: m.role, content: m.content };
+          }
+        }
+        return null;
+      })
+      .filter(Boolean);
 
+    // Make API call with tool support
     const response = await client.messages.create({
       model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 1024,
+      max_tokens: 2048,
       system: systemPrompt,
-      messages: sanitizedMessages
+      messages: sanitizedMessages,
+      tools: TOOLS
     });
 
+    // Handle tool use
+    if (response.stop_reason === 'tool_use') {
+      const toolUse = response.content.find(block => block.type === 'tool_use');
+
+      if (toolUse) {
+        const toolResult = executeToolCall(toolUse.name, toolUse.input, req.body.currentData);
+
+        return res.json({
+          response: null,
+          toolUse: {
+            id: toolUse.id,
+            name: toolUse.name,
+            input: toolUse.input,
+            result: toolResult
+          },
+          assistantMessage: response.content
+        });
+      }
+    }
+
+    // Regular text response
     const text = response.content
       .filter(b => b.type === 'text')
       .map(b => b.text)
@@ -88,7 +235,6 @@ app.post('/api/chat', rateLimit, async (req, res) => {
     res.json({ response: text });
   } catch (err) {
     console.error('Anthropic API error:', err.message);
-    // Don't leak internal error details to client
     const safeMsg = err.status === 401 ? 'Invalid API key. Check your .env file.'
       : err.status === 429 ? 'API rate limit reached. Please wait a moment.'
       : 'AI service temporarily unavailable. Please try again.';
@@ -96,21 +242,155 @@ app.post('/api/chat', rateLimit, async (req, res) => {
   }
 });
 
+// Execute tool calls
+function executeToolCall(toolName, input, currentData) {
+  // currentData contains the current state of bills, income, expenses, banks from frontend
+  const { bills = [], incomes = [], expenses = [], banks = [] } = currentData || {};
+
+  switch (toolName) {
+    case 'add_bill':
+      return {
+        success: true,
+        action: 'add_bill',
+        data: {
+          name: input.name,
+          amount: input.amount,
+          dueDate: input.dueDate,
+          category: input.category,
+          recurring: input.recurring || false,
+          status: 'unpaid'
+        },
+        message: `Bill "${input.name}" for ₱${input.amount.toLocaleString()} due on ${input.dueDate} has been added.`
+      };
+
+    case 'update_bill':
+      const billToUpdate = bills.find(b => b.id === input.billId);
+      if (!billToUpdate) {
+        return { success: false, error: 'Bill not found' };
+      }
+      return {
+        success: true,
+        action: 'update_bill',
+        billId: input.billId,
+        updates: input.updates,
+        message: `Bill "${billToUpdate.name}" has been updated.`
+      };
+
+    case 'mark_bill_paid':
+      const billToPay = bills.find(b => b.id === input.billId);
+      if (!billToPay) {
+        return { success: false, error: 'Bill not found' };
+      }
+      return {
+        success: true,
+        action: 'mark_bill_paid',
+        billId: input.billId,
+        message: `Bill "${billToPay.name}" marked as paid.`
+      };
+
+    case 'delete_bill':
+      const billToDelete = bills.find(b => b.id === input.billId);
+      if (!billToDelete) {
+        return { success: false, error: 'Bill not found' };
+      }
+      return {
+        success: true,
+        action: 'delete_bill',
+        billId: input.billId,
+        message: `Bill "${billToDelete.name}" has been deleted.`
+      };
+
+    case 'add_income':
+      return {
+        success: true,
+        action: 'add_income',
+        data: {
+          name: input.name,
+          amount: input.amount,
+          nextDate: input.nextDate,
+          recurring: input.recurring || false,
+          status: 'expected'
+        },
+        message: `Income "${input.name}" for ₱${input.amount.toLocaleString()} expected on ${input.nextDate} has been added.`
+      };
+
+    case 'add_expense':
+      return {
+        success: true,
+        action: 'add_expense',
+        data: {
+          name: input.name,
+          amount: input.amount,
+          category: input.category,
+          bankId: input.bankId || '',
+          date: input.date || new Date().toISOString().split('T')[0],
+          note: ''
+        },
+        message: `Expense "${input.name}" for ₱${input.amount.toLocaleString()} has been added.`
+      };
+
+    case 'update_bank_balance':
+      const bank = banks.find(b => b.id === input.bankId);
+      const bankName = bank ? bank.name : input.bankId;
+      return {
+        success: true,
+        action: 'update_bank_balance',
+        bankId: input.bankId,
+        balance: input.balance,
+        message: `${bankName} balance updated to ₱${input.balance.toLocaleString()}.`
+      };
+
+    case 'get_bills':
+      return {
+        success: true,
+        action: 'get_bills',
+        data: bills,
+        message: `Found ${bills.length} bills.`
+      };
+
+    default:
+      return { success: false, error: 'Unknown tool' };
+  }
+}
+
 function buildSystemPrompt(ctx) {
-  const base = `You are Bryan's AI Financial Advisor. You know his business inside out.
+  const base = `You are Bryan's AI Financial Advisor with the ability to manage his financial data.
+
+## Your Capabilities
+You can:
+- Add, update, and delete bills
+- Add income sources
+- Track expenses
+- Update bank balances
+- Analyze financial data from screenshots and images
+- Answer financial questions
+
+When users upload screenshots or images containing financial information (bills, receipts, invoices), analyze them carefully and extract:
+- Bill name
+- Amount
+- Due date
+- Category
+
+Then use your tools to add the data to the system.
 
 ## Bryan's Business
 Bryan runs a B2B automation business helping service businesses capture missed calls, respond in under 60 seconds, and convert leads into booked appointments. He operates from the Philippines, serving primarily US/English-speaking markets remotely.
 
 ## Your Role
-- Suggest how much Bryan can safely spend today based on his cash on hand, upcoming bills, and expected income
+- Help Bryan manage his finances by adding/updating data when requested
+- Suggest how much Bryan can safely spend today
 - Warn about upcoming cash crunches
 - Advise on cost optimization
 - Help prioritize which bills to pay first
 - Track progress toward his $20K/mo goal
 - Be direct, practical, and numbers-driven. No fluff.
 - Always show amounts in PHP. Mention USD equivalent when relevant.
-- When suggesting daily spend, factor in: bills due before next expected income, current cash on hand, and a safety buffer.`;
+- When suggesting daily spend, factor in: bills due before next expected income, current cash on hand, and a safety buffer.
+
+## Important
+- ALWAYS use your tools to modify data when the user asks you to add/update/delete something
+- Ask for confirmation before deleting data
+- When analyzing images, be thorough and accurate with extracting financial data`;
 
   if (!ctx) return base;
 
