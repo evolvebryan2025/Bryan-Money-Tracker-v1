@@ -65,8 +65,17 @@ const CloudSync = {
       }
     }
 
-    // No config found - user needs to add it via Settings
-    return null;
+    // Default Firebase config
+    return {
+      apiKey: "AIzaSyBOXY8YLvBZAQWFILKWkht7aQVApPkXrF4",
+      authDomain: "bryan-finance-tracker-7475a.firebaseapp.com",
+      databaseURL: "https://bryan-finance-tracker-7475a-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "bryan-finance-tracker-7475a",
+      storageBucket: "bryan-finance-tracker-7475a.firebasestorage.app",
+      messagingSenderId: "179662547562",
+      appId: "1:179662547562:web:ac8ef32d3365ea6da73813",
+      measurementId: "G-5B1W8NWBHD"
+    };
   },
 
   _hashUserId(username) {
