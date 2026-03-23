@@ -334,7 +334,7 @@ const Chat = {
           content: data.assistantMessage
         });
 
-        // Add tool result to messages
+        // Add tool result to messages (proper Anthropic format)
         this.messages.push({
           role: 'user',
           content: [
@@ -346,8 +346,8 @@ const Chat = {
           ]
         });
 
-        // Continue conversation to get AI's final response
-        await this._continueAfterTool();
+        // Continue conversation to get AI's final answer
+        await this._continueAfterTool(0);
       } else {
         this._addMessage('assistant', data.response);
       }
@@ -428,7 +428,13 @@ const Chat = {
     return result;
   },
 
-  async _continueAfterTool() {
+  async _continueAfterTool(depth) {
+    // Prevent infinite tool loops (max 5 chained tool calls)
+    if (depth >= 5) {
+      this._addMessage('assistant', 'Completed all actions.');
+      return;
+    }
+
     try {
       const financialContext = Budget.getFinancialContext();
       const res = await fetch('/api/chat', {
@@ -452,15 +458,36 @@ const Chat = {
         })
       });
 
-      if (!res.ok) return;
+      if (!res.ok) {
+        console.error('[Chat] Continue failed:', res.status);
+        return;
+      }
 
       const data = await res.json();
-      if (data.response && !data.toolUse) {
+
+      if (data.error) {
+        this._addMessage('assistant', `**Error:** ${data.error}`);
+      } else if (data.toolUse) {
+        // AI wants another tool call - execute it
+        const result = await this._executeToolUse(data.toolUse);
+        const toolMessage = result.success !== false
+          ? `${result.message || 'Done.'}\n\n✅ ${result.action || 'Action'} completed.`
+          : `**Error:** ${result.error || 'Action failed.'}`;
+        this._addMessage('assistant', toolMessage);
+
+        // Chain: add tool use + result, then continue
+        this.messages.push({ role: 'assistant', content: data.assistantMessage });
+        this.messages.push({
+          role: 'user',
+          content: [{ type: 'tool_result', tool_use_id: data.toolUse.id, content: JSON.stringify(result) }]
+        });
+
+        await this._continueAfterTool(depth + 1);
+      } else if (data.response) {
         this._addMessage('assistant', data.response);
       }
     } catch (err) {
-      // Silent fail - the tool execution message is sufficient
-      console.log('[Chat] Continue after tool skipped:', err.message);
+      console.error('[Chat] Continue after tool error:', err.message);
     }
   },
 
