@@ -12,24 +12,11 @@ const PORT = process.env.PORT || 3000;
 
 // ===== AUTH CONFIGURATION =====
 const AUTHORIZED_EMAIL = 'bryansumaitofficial@gmail.com';
-
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-// Active sessions: Map<token, { email, expires }>
-const sessions = new Map();
+const TOKEN_SECRET = process.env.TOKEN_SECRET || 'bf-finance-' + AUTHORIZED_EMAIL;
 
 // Login attempt tracking for brute-force protection: Map<ip, timestamp[]>
 const loginAttempts = new Map();
-
-// Clean up expired sessions every 15 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [token, session] of sessions) {
-    if (session.expires <= now) {
-      sessions.delete(token);
-    }
-  }
-}, 15 * 60 * 1000);
 
 // Clean up old login attempts every 5 minutes
 setInterval(() => {
@@ -40,6 +27,36 @@ setInterval(() => {
     else loginAttempts.set(ip, recent);
   }
 }, 300000);
+
+// Stateless token helpers (HMAC-signed, works across Vercel instances)
+function createToken(email, expires) {
+  const payload = `${email}:${expires}`;
+  const sig = crypto.createHmac('sha256', TOKEN_SECRET).update(payload).digest('hex');
+  return Buffer.from(`${payload}:${sig}`).toString('base64url');
+}
+
+function verifyToken(token) {
+  try {
+    const decoded = Buffer.from(token, 'base64url').toString();
+    const parts = decoded.split(':');
+    if (parts.length < 3) return null;
+
+    const sig = parts.pop();
+    const expires = Number(parts.pop());
+    const email = parts.join(':'); // handles emails with colons (unlikely but safe)
+
+    if (isNaN(expires) || expires <= Date.now()) return null;
+
+    const expectedSig = crypto.createHmac('sha256', TOKEN_SECRET)
+      .update(`${email}:${expires}`).digest('hex');
+
+    if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))) return null;
+
+    return { email, expires };
+  } catch {
+    return null;
+  }
+}
 
 // Security headers
 app.use((req, res, next) => {
@@ -108,15 +125,10 @@ function requireAuth(req, res, next) {
   }
 
   const token = authHeader.slice(7);
-  const session = sessions.get(token);
+  const session = verifyToken(token);
 
   if (!session) {
-    return res.status(401).json({ error: 'Invalid session. Please log in again.' });
-  }
-
-  if (session.expires <= Date.now()) {
-    sessions.delete(token);
-    return res.status(401).json({ error: 'Session expired. Please log in again.' });
+    return res.status(401).json({ error: 'Invalid or expired session. Please log in again.' });
   }
 
   req.sessionUser = session.email;
@@ -153,11 +165,9 @@ app.post('/api/login', loginRateLimit, (req, res) => {
     return res.status(401).json({ error: 'Unauthorized email address.' });
   }
 
-  // Generate session token
-  const token = crypto.randomUUID();
+  // Generate stateless signed token
   const expires = Date.now() + SESSION_DURATION_MS;
-
-  sessions.set(token, Object.freeze({ email: normalizedEmail, expires }));
+  const token = createToken(normalizedEmail, expires);
 
   return res.json({
     token,
@@ -174,10 +184,9 @@ app.get('/api/validate-session', (req, res) => {
   }
 
   const token = authHeader.slice(7);
-  const session = sessions.get(token);
+  const session = verifyToken(token);
 
-  if (!session || session.expires <= Date.now()) {
-    if (session) sessions.delete(token);
+  if (!session) {
     return res.json({ valid: false });
   }
 
