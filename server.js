@@ -348,8 +348,8 @@ app.post('/api/chat', requireAuth, rateLimit, async (req, res) => {
 
     // Make API call with tool support
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 2048,
+      model: process.env.CLAUDE_MODEL || 'claude-opus-4-20250514',
+      max_tokens: 4096,
       system: systemPrompt,
       messages: sanitizedMessages,
       tools: TOOLS

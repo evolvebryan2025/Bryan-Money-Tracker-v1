@@ -836,6 +836,11 @@ input:focus, select:focus, textarea:focus {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+  transition: border-color 0.2s;
+}
+.chat-container.drag-over {
+  border-color: var(--red);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
 }
 .chat-messages {
   flex: 1;

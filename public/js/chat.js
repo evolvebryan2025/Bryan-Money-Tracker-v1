@@ -9,6 +9,71 @@ const Chat = {
     if (this.messages.length > 0) {
       this._renderHistory();
     }
+
+    // Enable paste support for images (Ctrl+V / Cmd+V)
+    document.addEventListener('paste', (e) => {
+      // Only handle paste when chat view is active
+      if (App.currentView !== 'chat') return;
+
+      const items = Array.from(e.clipboardData?.items || []);
+      const imageItems = items.filter(item => item.type.startsWith('image/'));
+
+      if (imageItems.length > 0) {
+        e.preventDefault();
+        imageItems.forEach(item => {
+          const blob = item.getAsFile();
+          if (!blob) return;
+
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            this.uploadedFiles.push({
+              type: 'image',
+              data: ev.target.result,
+              name: `pasted-image-${Date.now()}.png`,
+              mimeType: blob.type
+            });
+            this._updateFilePreview();
+            Toast.show('Image pasted! Add a message or click Send.', 'success');
+          };
+          reader.readAsDataURL(blob);
+        });
+      }
+    });
+
+    // Enable drag-and-drop for images
+    const chatContainer = document.querySelector('.chat-container');
+    if (chatContainer) {
+      chatContainer.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        chatContainer.classList.add('drag-over');
+      });
+      chatContainer.addEventListener('dragleave', () => {
+        chatContainer.classList.remove('drag-over');
+      });
+      chatContainer.addEventListener('drop', (e) => {
+        e.preventDefault();
+        chatContainer.classList.remove('drag-over');
+        const files = Array.from(e.dataTransfer.files);
+        files.forEach(file => {
+          if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              this.uploadedFiles.push({
+                type: 'image',
+                data: ev.target.result,
+                name: file.name,
+                mimeType: file.type
+              });
+              this._updateFilePreview();
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+        if (files.some(f => f.type.startsWith('image/'))) {
+          Toast.show('Image added! Add a message or click Send.', 'success');
+        }
+      });
+    }
   },
 
   send() {
@@ -72,7 +137,7 @@ const Chat = {
   },
 
   removeFile(index) {
-    this.uploadedFiles.splice(index, 1);
+    this.uploadedFiles = this.uploadedFiles.filter((_, i) => i !== index);
     this._updateFilePreview();
   },
 
@@ -88,9 +153,9 @@ const Chat = {
     preview.style.display = 'flex';
     preview.innerHTML = this.uploadedFiles.map((file, index) => `
       <div class="file-preview-item">
-        <img src="${file.data}" alt="${file.name}">
-        <button type="button" class="file-remove-btn" onclick="Chat.removeFile(${index})" aria-label="Remove file">×</button>
-        <span class="file-name">${file.name}</span>
+        <img src="${file.data}" alt="${Utils.esc(file.name)}">
+        <button type="button" class="file-remove-btn" onclick="Chat.removeFile(${index})" aria-label="Remove file">&times;</button>
+        <span class="file-name">${Utils.esc(file.name)}</span>
       </div>
     `).join('');
   },
@@ -146,7 +211,7 @@ const Chat = {
       html += '<div class="chat-images">';
       files.forEach(file => {
         if (file.type === 'image') {
-          html += `<img src="${file.data}" alt="${file.name}" class="chat-image">`;
+          html += `<img src="${file.data}" alt="${Utils.esc(file.name)}" class="chat-image">`;
         }
       });
       html += '</div>';
@@ -405,7 +470,7 @@ const Chat = {
         html += '<div class="chat-images">';
         m.files.forEach(file => {
           if (file.type === 'image') {
-            html += `<img src="${file.data}" alt="${file.name}" class="chat-image">`;
+            html += `<img src="${file.data}" alt="${Utils.esc(file.name)}" class="chat-image">`;
           }
         });
         html += '</div>';
