@@ -198,6 +198,18 @@ app.get('/api/validate-session', (req, res) => {
   return res.json({ valid: true, email: session.email });
 });
 
+// Debug endpoint (temporary)
+app.get('/api/debug', (req, res) => {
+  const key = process.env.ANTHROPIC_API_KEY;
+  res.json({
+    hasKey: !!key,
+    keyPrefix: key ? key.substring(0, 10) + '...' : 'MISSING',
+    sdkLoaded: !!Anthropic,
+    sdkType: typeof Anthropic,
+    nodeVersion: process.version
+  });
+});
+
 // Tool definitions for data manipulation
 const TOOLS = [
   {
