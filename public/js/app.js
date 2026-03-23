@@ -101,6 +101,35 @@ const App = {
       Storage.saveMonthlySnapshot();
     }
 
+    // Migrate income data to match Bryan's spreadsheet (March 2026)
+    if (!Storage.getSetting('income_fix_v2')) {
+      const corrections = {
+        'Prince':        { amount: 27350, schedule: 'bi-monthly', note: '15th & 30th' },
+        'Thom':          { amount: 10000, schedule: 'monthly', note: '30th of month' },
+        'Property Bots': { amount: 27500, schedule: 'monthly', note: '5th of month' },
+        'Juan':          { amount: 5800,  schedule: 'weekly', note: 'Every Friday' },
+        'Disruptor':     { amount: 36250, schedule: 'bi-monthly', note: '10th & 24th' },
+        'Joshua':        { amount: 18125, schedule: 'weekly', note: 'Every Friday' }
+      };
+
+      const incomes = Storage.getIncomes();
+      const correctedNames = new Set();
+      const updated = incomes.map(i => {
+        const fix = corrections[i.name];
+        if (fix && !correctedNames.has(i.name)) {
+          correctedNames.add(i.name);
+          return { ...i, ...fix };
+        }
+        return i;
+      });
+
+      // Remove "Andrej and Carlo" (not in current spreadsheet)
+      const cleaned = updated.filter(i => i.name !== 'Andrej and Carlo');
+      Storage.saveIncomes(cleaned);
+      Storage.setSetting('income_fix_v2', true);
+      Storage.saveMonthlySnapshot();
+    }
+
     // Migrate all bank accounts to PHP
     if (!Storage.getSetting('banks_all_php')) {
       const banks = Storage.getBanks().map(b => ({ ...b, currency: 'PHP' }));

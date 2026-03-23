@@ -411,13 +411,12 @@ const Storage = {
     this.saveBills(bills);
 
     const incomes = [
-      { name: 'Prince', amount: 55680, schedule: 'bi-monthly', nextDate: `${y}-${String(m+1).padStart(2,'0')}-15`, note: '15th & 30th', status: 'expected' },
-      { name: 'Thom', amount: 0, schedule: 'monthly', nextDate: null, note: '', status: 'expected' },
+      { name: 'Prince', amount: 27350, schedule: 'bi-monthly', nextDate: `${y}-${String(m+1).padStart(2,'0')}-15`, note: '15th & 30th', status: 'expected' },
+      { name: 'Thom', amount: 10000, schedule: 'monthly', nextDate: `${y}-${String(m+1).padStart(2,'0')}-30`, note: '30th of month', status: 'expected' },
       { name: 'Property Bots', amount: 27500, schedule: 'monthly', nextDate: `${y}-${String(m+1).padStart(2,'0')}-05`, note: '5th of month', status: 'expected' },
-      { name: 'Juan', amount: 23200, schedule: 'weekly', nextDate: null, note: 'Weekly', status: 'expected' },
-      { name: 'Disruptor', amount: 58000, schedule: 'bi-monthly', nextDate: `${y}-${String(m+1).padStart(2,'0')}-12`, note: '12th & 26th', status: 'expected' },
-      { name: 'Andrej and Carlo', amount: 28246, schedule: 'monthly', nextDate: `${y}-${String(m+1).padStart(2,'0')}-05`, note: '5th of month', status: 'expected' },
-      { name: 'Joshua', amount: 0, schedule: 'monthly', nextDate: null, note: '', status: 'expected' }
+      { name: 'Juan', amount: 5800, schedule: 'weekly', nextDate: null, note: 'Every Friday', status: 'expected' },
+      { name: 'Disruptor', amount: 36250, schedule: 'bi-monthly', nextDate: `${y}-${String(m+1).padStart(2,'0')}-10`, note: '10th & 24th', status: 'expected' },
+      { name: 'Joshua', amount: 18125, schedule: 'weekly', nextDate: null, note: 'Every Friday', status: 'expected' }
     ];
 
     incomes.forEach(i => {
