@@ -1,65 +1,110 @@
 // ===== AUTHENTICATION MODULE =====
 const Auth = {
-  // Default credentials (username: bryansumait, password: bryansumait03)
-  // Password is SHA-256 hashed for basic security
-  CREDENTIALS: {
-    username: 'bryansumait',
-    passwordHash: '264bc2006a1a5388e5b8f78bb8a3ac1ab624889c2006cd4570354a04186864ed' // "bryansumait03"
-  },
+  SESSION_KEY: 'bf_session',
 
   init() {
     // Check if user is already logged in
     if (!this.isLoggedIn()) {
       this.showLoginScreen();
     } else {
-      this.showApp();
+      // Validate session with server before showing app
+      this._validateSession().then(valid => {
+        if (valid) {
+          this.showApp();
+        } else {
+          this.logout();
+        }
+      });
     }
   },
 
   isLoggedIn() {
-    const session = localStorage.getItem('bf_session');
+    const session = localStorage.getItem(this.SESSION_KEY);
     if (!session) return false;
 
     try {
       const sessionData = JSON.parse(session);
       const now = Date.now();
 
-      // Session expires after 24 hours
-      if (sessionData.expires && sessionData.expires > now) {
-        return sessionData.username === this.CREDENTIALS.username;
+      // Check client-side expiry first (quick check before server round-trip)
+      if (sessionData.expires && sessionData.expires > now && sessionData.token) {
+        return true;
       }
     } catch (e) {
       console.error('[Auth] Invalid session data');
     }
 
     // Invalid or expired session
-    this.logout();
+    localStorage.removeItem(this.SESSION_KEY);
     return false;
+  },
+
+  getSessionToken() {
+    try {
+      const session = JSON.parse(localStorage.getItem(this.SESSION_KEY) || '{}');
+      return session.token || null;
+    } catch (e) {
+      return null;
+    }
+  },
+
+  async _validateSession() {
+    const token = this.getSessionToken();
+    if (!token) return false;
+
+    try {
+      const response = await fetch('/api/validate-session', {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) return false;
+
+      const data = await response.json();
+      return data.valid === true;
+    } catch (e) {
+      console.error('[Auth] Session validation failed:', e.message);
+      return false;
+    }
   },
 
   async login(username, password) {
-    // Hash the password
+    // Hash the password client-side so raw password never leaves the browser
     const passwordHash = await this._hashPassword(password);
 
-    // Verify credentials
-    if (username === this.CREDENTIALS.username && passwordHash === this.CREDENTIALS.passwordHash) {
-      // Create session (expires in 24 hours)
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, passwordHash })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('[Auth] Login failed:', data.error);
+        return { success: false, error: data.error || 'Login failed' };
+      }
+
+      // Store session with server-issued token
       const session = {
-        username,
+        token: data.token,
+        username: data.username,
         loginTime: Date.now(),
-        expires: Date.now() + (24 * 60 * 60 * 1000)
+        expires: data.expires
       };
 
-      localStorage.setItem('bf_session', JSON.stringify(session));
+      localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
       this.showApp();
-      return true;
+      return { success: true };
+    } catch (e) {
+      console.error('[Auth] Login request failed:', e.message);
+      return { success: false, error: 'Network error. Please try again.' };
     }
-
-    return false;
   },
 
   logout() {
-    localStorage.removeItem('bf_session');
+    localStorage.removeItem(this.SESSION_KEY);
     this.showLoginScreen();
   },
 
@@ -160,8 +205,7 @@ const Auth = {
         </form>
 
         <div class="login-footer">
-          <p class="login-hint">💡 Login: <code>bryansumait</code> / <code>bryansumait03</code></p>
-          <p class="login-version">v2.0 • Enhanced Edition</p>
+          <p class="login-version">v2.1 • Secure Edition</p>
         </div>
       </div>
     `;
@@ -179,14 +223,14 @@ const Auth = {
     errorDiv.style.display = 'none';
 
     // Attempt login
-    const success = await this.login(username, password);
+    const result = await this.login(username, password);
 
-    if (success) {
+    if (result.success) {
       // Login successful
       console.log('[Auth] Login successful');
     } else {
       // Login failed
-      errorDiv.textContent = '❌ Invalid username or password';
+      errorDiv.textContent = result.error || 'Invalid username or password';
       errorDiv.style.display = 'block';
 
       // Shake animation
@@ -207,11 +251,5 @@ const Auth = {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     return hashHex;
-  },
-
-  // Utility to generate password hash (for creating new users)
-  async generatePasswordHash(password) {
-    const hash = await this._hashPassword(password);
-    return hash;
   }
 };

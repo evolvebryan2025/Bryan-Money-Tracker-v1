@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
 
 let Anthropic;
 try { Anthropic = require('@anthropic-ai/sdk').default || require('@anthropic-ai/sdk'); } catch(e) {}
@@ -8,6 +9,40 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ===== AUTH CONFIGURATION =====
+const AUTH_CREDENTIALS = Object.freeze({
+  username: 'bryansumait',
+  passwordHash: '264bc2006a1a5388e5b8f78bb8a3ac1ab624889c2006cd4570354a04186864ed'
+});
+
+const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// Active sessions: Map<token, { username, expires }>
+const sessions = new Map();
+
+// Login attempt tracking for brute-force protection: Map<ip, timestamp[]>
+const loginAttempts = new Map();
+
+// Clean up expired sessions every 15 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [token, session] of sessions) {
+    if (session.expires <= now) {
+      sessions.delete(token);
+    }
+  }
+}, 15 * 60 * 1000);
+
+// Clean up old login attempts every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, attempts] of loginAttempts) {
+    const recent = attempts.filter(t => now - t < 60000);
+    if (recent.length === 0) loginAttempts.delete(ip);
+    else loginAttempts.set(ip, recent);
+  }
+}, 300000);
 
 // Security headers
 app.use((req, res, next) => {
@@ -50,6 +85,107 @@ setInterval(() => {
     else rateMap.set(ip, recent);
   }
 }, 300000);
+
+// ===== LOGIN RATE LIMITER (5 attempts per IP per minute) =====
+function loginRateLimit(req, res, next) {
+  const ip = req.ip;
+  const now = Date.now();
+  const windowMs = 60000;
+  const maxAttempts = 5;
+
+  const attempts = (loginAttempts.get(ip) || []).filter(t => now - t < windowMs);
+  if (attempts.length >= maxAttempts) {
+    return res.status(429).json({ error: 'Too many login attempts. Please wait 60 seconds.' });
+  }
+
+  // Record this attempt (immutable: create new array)
+  loginAttempts.set(ip, [...attempts, now]);
+  next();
+}
+
+// ===== AUTH MIDDLEWARE =====
+function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
+
+  const token = authHeader.slice(7);
+  const session = sessions.get(token);
+
+  if (!session) {
+    return res.status(401).json({ error: 'Invalid session. Please log in again.' });
+  }
+
+  if (session.expires <= Date.now()) {
+    sessions.delete(token);
+    return res.status(401).json({ error: 'Session expired. Please log in again.' });
+  }
+
+  req.sessionUser = session.username;
+  next();
+}
+
+// ===== AUTH ENDPOINTS =====
+
+// POST /api/login
+app.post('/api/login', loginRateLimit, (req, res) => {
+  const { username, passwordHash } = req.body || {};
+
+  if (!username || !passwordHash) {
+    return res.status(400).json({ error: 'Username and password are required.' });
+  }
+
+  if (typeof username !== 'string' || typeof passwordHash !== 'string') {
+    return res.status(400).json({ error: 'Invalid input.' });
+  }
+
+  // Constant-time comparison to prevent timing attacks
+  const maxUsernameLen = Math.max(username.length, AUTH_CREDENTIALS.username.length);
+  const usernameMatch = username.length === AUTH_CREDENTIALS.username.length &&
+    crypto.timingSafeEqual(
+      Buffer.from(username.padEnd(maxUsernameLen, '\0')),
+      Buffer.from(AUTH_CREDENTIALS.username.padEnd(maxUsernameLen, '\0'))
+    );
+  const hashBuffer = Buffer.from(passwordHash, 'utf8');
+  const expectedBuffer = Buffer.from(AUTH_CREDENTIALS.passwordHash, 'utf8');
+  const hashMatch = hashBuffer.length === expectedBuffer.length &&
+    crypto.timingSafeEqual(hashBuffer, expectedBuffer);
+
+  if (!usernameMatch || !hashMatch) {
+    return res.status(401).json({ error: 'Invalid username or password.' });
+  }
+
+  // Generate session token
+  const token = crypto.randomUUID();
+  const expires = Date.now() + SESSION_DURATION_MS;
+
+  sessions.set(token, Object.freeze({ username, expires }));
+
+  return res.json({
+    token,
+    username,
+    expires
+  });
+});
+
+// GET /api/validate-session
+app.get('/api/validate-session', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.json({ valid: false });
+  }
+
+  const token = authHeader.slice(7);
+  const session = sessions.get(token);
+
+  if (!session || session.expires <= Date.now()) {
+    if (session) sessions.delete(token);
+    return res.json({ valid: false });
+  }
+
+  return res.json({ valid: true, username: session.username });
+});
 
 // Tool definitions for data manipulation
 const TOOLS = [
@@ -164,7 +300,7 @@ const TOOLS = [
 ];
 
 // AI Chat proxy endpoint with tool support
-app.post('/api/chat', rateLimit, async (req, res) => {
+app.post('/api/chat', requireAuth, rateLimit, async (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey || apiKey === 'your-api-key-here') {

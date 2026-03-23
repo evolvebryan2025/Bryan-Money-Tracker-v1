@@ -230,7 +230,10 @@ const Chat = {
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Auth.getSessionToken()}`
+        },
         body: JSON.stringify({
           financialContext,
           messages: apiMessages,
@@ -354,7 +357,10 @@ const Chat = {
       const financialContext = Budget.getFinancialContext();
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Auth.getSessionToken()}`
+        },
         body: JSON.stringify({
           financialContext,
           messages: this.messages.map(m => ({

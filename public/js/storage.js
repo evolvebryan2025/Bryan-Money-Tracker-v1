@@ -23,11 +23,14 @@ const Storage = {
   },
   addBill(bill) {
     const bills = this.getBills();
-    bill.id = bill.id || Utils.uid();
-    bill.createdAt = bill.createdAt || new Date().toISOString();
-    bills.push(bill);
+    const newBill = {
+      ...bill,
+      id: bill.id || Utils.uid(),
+      createdAt: bill.createdAt || new Date().toISOString()
+    };
+    bills.push(newBill);
     this.saveBills(bills);
-    return bill;
+    return newBill;
   },
   updateBill(id, updates) {
     const bills = this.getBills().map(b => b.id === id ? { ...b, ...updates } : b);
@@ -47,11 +50,14 @@ const Storage = {
   },
   addIncome(income) {
     const incomes = this.getIncomes();
-    income.id = income.id || Utils.uid();
-    income.createdAt = income.createdAt || new Date().toISOString();
-    incomes.push(income);
+    const newIncome = {
+      ...income,
+      id: income.id || Utils.uid(),
+      createdAt: income.createdAt || new Date().toISOString()
+    };
+    incomes.push(newIncome);
     this.saveIncomes(incomes);
-    return income;
+    return newIncome;
   },
   updateIncome(id, updates) {
     const incomes = this.getIncomes().map(i => i.id === id ? { ...i, ...updates } : i);
@@ -71,27 +77,30 @@ const Storage = {
   },
   addExpense(expense) {
     const expenses = this.getExpenses();
-    expense.id = expense.id || Utils.uid();
-    expense.createdAt = expense.createdAt || new Date().toISOString();
-    expenses.unshift(expense); // Most recent first
+    const newExpense = {
+      ...expense,
+      id: expense.id || Utils.uid(),
+      createdAt: expense.createdAt || new Date().toISOString()
+    };
+    expenses.unshift(newExpense); // Most recent first
     this.saveExpenses(expenses);
 
     // Deduct from bank account if specified
-    if (expense.bankId) {
-      const bank = this.getBanks().find(b => b.id === expense.bankId);
+    if (newExpense.bankId) {
+      const bank = this.getBanks().find(b => b.id === newExpense.bankId);
       if (bank) {
-        this.updateBank(expense.bankId, bank.balance - expense.amount);
+        this.updateBank(newExpense.bankId, bank.balance - newExpense.amount);
         this.addBankTxn({
           type: 'expense',
-          bankId: expense.bankId,
-          amount: -expense.amount,
-          description: expense.name,
-          category: expense.category
+          bankId: newExpense.bankId,
+          amount: -newExpense.amount,
+          description: newExpense.name,
+          category: newExpense.category
         });
       }
     }
 
-    return expense;
+    return newExpense;
   },
   updateExpense(id, updates) {
     const expenses = this.getExpenses().map(e => e.id === id ? { ...e, ...updates } : e);
@@ -129,9 +138,12 @@ const Storage = {
   getBankTxns() { return this._get('bank_txns') || []; },
   addBankTxn(txn) {
     const txns = this.getBankTxns();
-    txn.id = Utils.uid();
-    txn.date = txn.date || new Date().toISOString();
-    txns.unshift(txn);
+    const newTxn = {
+      ...txn,
+      id: Utils.uid(),
+      date: txn.date || new Date().toISOString()
+    };
+    txns.unshift(newTxn);
     if (txns.length > 100) txns.pop();
     this._set('bank_txns', txns);
   },
@@ -153,11 +165,14 @@ const Storage = {
   },
   addTeamMember(member) {
     const team = this.getTeam();
-    member.id = member.id || Utils.uid();
-    member.paid = false;
-    team.push(member);
+    const newMember = {
+      ...member,
+      id: member.id || Utils.uid(),
+      paid: false
+    };
+    team.push(newMember);
     this.saveTeam(team);
-    return member;
+    return newMember;
   },
   deleteTeamMember(id) {
     this.saveTeam(this.getTeam().filter(m => m.id !== id));
@@ -168,12 +183,15 @@ const Storage = {
   saveInvoices(inv) { this._set('invoices', inv); },
   addInvoice(inv) {
     const invoices = this.getInvoices();
-    inv.id = inv.id || Utils.uid();
-    inv.number = inv.number || 'INV-' + String(invoices.length + 1).padStart(3, '0');
-    inv.createdAt = new Date().toISOString();
-    invoices.push(inv);
+    const newInv = {
+      ...inv,
+      id: inv.id || Utils.uid(),
+      number: inv.number || 'INV-' + String(invoices.length + 1).padStart(3, '0'),
+      createdAt: new Date().toISOString()
+    };
+    invoices.push(newInv);
     this.saveInvoices(invoices);
-    return inv;
+    return newInv;
   },
   updateInvoice(id, updates) {
     const invoices = this.getInvoices().map(i => i.id === id ? { ...i, ...updates } : i);

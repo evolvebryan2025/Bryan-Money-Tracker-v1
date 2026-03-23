@@ -13,10 +13,10 @@ const CloudSync = {
       return;
     }
 
-    // Get Firebase config from settings or use default
+    // Get Firebase config from settings
     const config = this._getFirebaseConfig();
     if (!config) {
-      console.log('[Sync] No Firebase config found');
+      console.log('[Sync] No Firebase config found. Configure in Settings > Cloud Sync to enable cross-device sync.');
       return;
     }
 
@@ -54,28 +54,19 @@ const CloudSync = {
   },
 
   _getFirebaseConfig() {
-    // Check if config is in settings
+    // Read config exclusively from user settings - no hardcoded fallback
     const savedConfig = Storage.getSetting('firebase_config');
-    if (savedConfig) {
-      try {
-        return JSON.parse(savedConfig);
-      } catch (err) {
-        console.error('[Sync] Invalid Firebase config JSON:', err);
-        return null;
-      }
+    if (!savedConfig) {
+      console.log('[Sync] Firebase config not set. Please add your Firebase configuration in Settings > Cloud Sync.');
+      return null;
     }
 
-    // Default Firebase config
-    return {
-      apiKey: "AIzaSyBOXY8YLvBZAQWFILKWkht7aQVApPkXrF4",
-      authDomain: "bryan-finance-tracker-7475a.firebaseapp.com",
-      databaseURL: "https://bryan-finance-tracker-7475a-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "bryan-finance-tracker-7475a",
-      storageBucket: "bryan-finance-tracker-7475a.firebasestorage.app",
-      messagingSenderId: "179662547562",
-      appId: "1:179662547562:web:ac8ef32d3365ea6da73813",
-      measurementId: "G-5B1W8NWBHD"
-    };
+    try {
+      return JSON.parse(savedConfig);
+    } catch (err) {
+      console.error('[Sync] Invalid Firebase config JSON:', err);
+      return null;
+    }
   },
 
   _hashUserId(username) {

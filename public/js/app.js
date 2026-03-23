@@ -16,7 +16,7 @@ const Toast = {
     const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
     toast.innerHTML = `
       <span class="toast-icon">${icons[type] || icons.info}</span>
-      <span class="toast-message">${message}</span>
+      <span class="toast-message">${Utils.esc(message)}</span>
       <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
     `;
 

@@ -17,9 +17,16 @@ const ASSETS_TO_CACHE = [
   '/js/expenses.js',
   '/js/insights.js',
   '/js/timeline.js',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/badge-72.png'
+  '/js/auth.js',
+  '/js/sync.js',
+  '/js/team.js',
+  '/js/invoices.js',
+  '/js/goals.js',
+  '/js/notifications.js',
+  '/js/pwa.js',
+  '/icon-192.svg',
+  '/icon-512.svg',
+  '/badge-72.svg'
 ];
 
 // Install event - cache all static assets
@@ -144,8 +151,8 @@ self.addEventListener('push', event => {
   const data = event.data.json();
   const options = {
     body: data.body,
-    icon: '/icon-192.png',
-    badge: '/badge-72.png',
+    icon: '/icon-192.svg',
+    badge: '/badge-72.svg',
     vibrate: [200, 100, 200],
     data: data.data || {},
     actions: data.actions || []
