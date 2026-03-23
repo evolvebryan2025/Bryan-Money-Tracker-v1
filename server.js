@@ -203,8 +203,72 @@ app.get('/api/validate-session', (req, res) => {
 // Tool definitions for data manipulation
 const TOOLS = [
   {
+    name: 'bulk_update',
+    description: 'Add multiple bills, incomes, expenses, and/or update bank balances ALL IN ONE CALL. Use this whenever the user asks you to add or update more than one item. This is the preferred tool for any batch operation.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        bills: {
+          type: 'array',
+          description: 'Bills to add',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              amount: { type: 'number' },
+              dueDate: { type: 'string', description: 'YYYY-MM-DD' },
+              category: { type: 'string' },
+              recurring: { type: 'boolean' }
+            },
+            required: ['name', 'amount', 'dueDate', 'category']
+          }
+        },
+        incomes: {
+          type: 'array',
+          description: 'Income sources to add',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              amount: { type: 'number' },
+              nextDate: { type: 'string', description: 'YYYY-MM-DD' },
+              recurring: { type: 'boolean' }
+            },
+            required: ['name', 'amount', 'nextDate']
+          }
+        },
+        expenses: {
+          type: 'array',
+          description: 'Expenses to add',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              amount: { type: 'number' },
+              category: { type: 'string', enum: ['food', 'transport', 'tools', 'personal', 'other'] },
+              date: { type: 'string' }
+            },
+            required: ['name', 'amount', 'category']
+          }
+        },
+        bankUpdates: {
+          type: 'array',
+          description: 'Bank balance updates',
+          items: {
+            type: 'object',
+            properties: {
+              bankId: { type: 'string' },
+              balance: { type: 'number' }
+            },
+            required: ['bankId', 'balance']
+          }
+        }
+      }
+    }
+  },
+  {
     name: 'add_bill',
-    description: 'Add a new bill to the system. Use this when the user wants to add a bill they need to pay.',
+    description: 'Add a single bill. For multiple bills, use bulk_update instead.',
     input_schema: {
       type: 'object',
       properties: {
@@ -410,6 +474,35 @@ function executeToolCall(toolName, input, currentData) {
   const { bills = [], incomes = [], expenses = [], banks = [] } = currentData || {};
 
   switch (toolName) {
+    case 'bulk_update': {
+      const summary = [];
+      const addedBills = (input.bills || []).map(b => ({
+        name: b.name, amount: b.amount, dueDate: b.dueDate,
+        category: b.category, recurring: b.recurring || false, status: 'unpaid'
+      }));
+      const addedIncomes = (input.incomes || []).map(i => ({
+        name: i.name, amount: i.amount, nextDate: i.nextDate,
+        recurring: i.recurring || false, status: 'expected'
+      }));
+      const addedExpenses = (input.expenses || []).map(e => ({
+        name: e.name, amount: e.amount, category: e.category,
+        bankId: e.bankId || '', date: e.date || new Date().toISOString().split('T')[0], note: ''
+      }));
+      const bankUpdates = input.bankUpdates || [];
+
+      if (addedBills.length) summary.push(`${addedBills.length} bill(s) added`);
+      if (addedIncomes.length) summary.push(`${addedIncomes.length} income source(s) added`);
+      if (addedExpenses.length) summary.push(`${addedExpenses.length} expense(s) added`);
+      if (bankUpdates.length) summary.push(`${bankUpdates.length} bank balance(s) updated`);
+
+      return {
+        success: true,
+        action: 'bulk_update',
+        data: { bills: addedBills, incomes: addedIncomes, expenses: addedExpenses, bankUpdates },
+        message: summary.length > 0 ? `Bulk update: ${summary.join(', ')}.` : 'No changes made.'
+      };
+    }
+
     case 'add_bill':
       return {
         success: true,
@@ -556,10 +649,12 @@ You can:
 - Answer financial questions
 
 ## Important Rules for Tool Usage
-- When the user asks to mark multiple or all bills as paid, use bulk_mark_bills_paid with filter='all_unpaid' instead of marking them one by one
+- ALWAYS use bulk_update when adding more than one item (bills, incomes, expenses, bank updates). NEVER add them one by one.
+- When the user asks to mark multiple or all bills as paid, use bulk_mark_bills_paid with filter='all_unpaid'
 - When the user says something is paid, USE THE TOOL immediately - don't just acknowledge it
 - Always answer the user's question AFTER using a tool - don't leave them hanging
-- If you need to see bills first, use get_bills, then in the continuation use bulk_mark_bills_paid
+- If you need to see bills first, use get_bills, then in the continuation take action
+- Prefer FEWER tool calls. Batch everything into one bulk_update call when possible.
 
 When users upload screenshots or images containing financial information (bills, receipts, invoices), analyze them carefully and extract:
 - Bill name

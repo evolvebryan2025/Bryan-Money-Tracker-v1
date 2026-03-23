@@ -367,6 +367,20 @@ const Chat = {
 
     // Apply the tool action to storage
     switch (result.action) {
+      case 'bulk_update':
+        if (result.data) {
+          (result.data.bills || []).forEach(b => Storage.addBill(b));
+          (result.data.incomes || []).forEach(i => Storage.addIncome(i));
+          (result.data.expenses || []).forEach(e => Storage.addExpense(e));
+          (result.data.bankUpdates || []).forEach(u => Storage.updateBank(u.bankId, u.balance));
+        }
+        Bills.render();
+        if (typeof Income !== 'undefined') Income.render();
+        if (typeof Banks !== 'undefined') Banks.render();
+        Dashboard.render();
+        Insights.invalidateCache();
+        break;
+
       case 'add_bill':
         Storage.addBill(result.data);
         Bills.render();
