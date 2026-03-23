@@ -20,6 +20,7 @@ const Storage = {
     if (typeof CloudSync !== 'undefined' && CloudSync.isEnabled) {
       CloudSync.pushToCloud('bills', bills);
     }
+
   },
   addBill(bill) {
     const bills = this.getBills();
@@ -47,6 +48,7 @@ const Storage = {
     if (typeof CloudSync !== 'undefined' && CloudSync.isEnabled) {
       CloudSync.pushToCloud('incomes', incomes);
     }
+
   },
   addIncome(income) {
     const incomes = this.getIncomes();
@@ -74,6 +76,7 @@ const Storage = {
     if (typeof CloudSync !== 'undefined' && CloudSync.isEnabled) {
       CloudSync.pushToCloud('expenses', expenses);
     }
+
   },
   addExpense(expense) {
     const expenses = this.getExpenses();
@@ -128,6 +131,7 @@ const Storage = {
     if (typeof CloudSync !== 'undefined' && CloudSync.isEnabled) {
       CloudSync.pushToCloud('banks', banks);
     }
+
   },
   updateBank(id, balance) {
     const banks = this.getBanks().map(b => b.id === id ? { ...b, balance: Number(balance) } : b);
@@ -158,7 +162,12 @@ const Storage = {
       { id: 'adam', name: 'Adam', role: 'GHL Developer', salary: 0, payDate: null, paid: false }
     ];
   },
-  saveTeam(team) { this._set('team', team); },
+  saveTeam(team) {
+    this._set('team', team);
+    if (typeof CloudSync !== 'undefined' && CloudSync.isEnabled) {
+      CloudSync.pushToCloud('team', team);
+    }
+  },
   updateTeamMember(id, updates) {
     const team = this.getTeam().map(m => m.id === id ? { ...m, ...updates } : m);
     this.saveTeam(team);
@@ -180,7 +189,12 @@ const Storage = {
 
   // --- Invoices ---
   getInvoices() { return this._get('invoices') || []; },
-  saveInvoices(inv) { this._set('invoices', inv); },
+  saveInvoices(inv) {
+    this._set('invoices', inv);
+    if (typeof CloudSync !== 'undefined' && CloudSync.isEnabled) {
+      CloudSync.pushToCloud('invoices', inv);
+    }
+  },
   addInvoice(inv) {
     const invoices = this.getInvoices();
     const newInv = {

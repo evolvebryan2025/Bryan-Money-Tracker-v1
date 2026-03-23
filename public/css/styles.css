@@ -2970,44 +2970,10 @@ canvas {
   }
 }
 
-/* ===== FIREBASE CONFIG STYLES ===== */
+/* ===== SUPABASE SYNC STYLES ===== */
 
-.firebase-config-section {
+.supabase-sync-section {
   margin-top: 1rem;
-}
-
-.firebase-config-section label {
-  display: block;
-  color: var(--text-70);
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.firebase-config-section textarea {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 0.875rem;
-  color: var(--text);
-  font-family: 'Courier New', monospace;
-  font-size: 0.85rem;
-  resize: vertical;
-  min-height: 150px;
-  margin-bottom: 0.75rem;
-  box-sizing: border-box;
-}
-
-.firebase-config-section textarea:focus {
-  outline: none;
-  border-color: var(--cyan);
-  background: rgba(0, 212, 255, 0.05);
-}
-
-.firebase-config-section textarea::placeholder {
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 0.8rem;
 }
 
 .sync-status {

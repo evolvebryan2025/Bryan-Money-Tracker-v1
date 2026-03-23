@@ -510,25 +510,14 @@
 
       <div class="settings-grid">
         <div class="section-card">
-          <h3>☁️ Cloud Sync (Firebase)</h3>
-          <p class="help-text">Sync your data across all devices. <a href="https://github.com/evolvebryan2025/Bryan-Money-Tracker-v1/blob/main/FIREBASE_SETUP.md" target="_blank" rel="noopener noreferrer" class="link-cyan">Setup Guide →</a></p>
-          <div class="firebase-config-section">
-            <label for="firebase-config">Firebase Config (JSON):</label>
-            <textarea id="firebase-config" rows="8" placeholder='Paste your Firebase config here, e.g.:
-{
-  "apiKey": "AIza...",
-  "authDomain": "your-project.firebaseapp.com",
-  "databaseURL": "https://your-project.firebaseio.com",
-  "projectId": "your-project",
-  "storageBucket": "your-project.appspot.com",
-  "messagingSenderId": "123456789",
-  "appId": "1:123456789:web:abc123"
-}'></textarea>
-            <div class="btn-group">
-              <button type="button" class="btn btn-cyan" onclick="Settings.saveFirebaseConfig()">💾 Save & Enable Sync</button>
-              <button type="button" class="btn btn-sm" onclick="Settings.testFirebaseSync()">🔄 Test Sync</button>
-            </div>
+          <h3>☁️ Cloud Sync (Supabase)</h3>
+          <p class="help-text">Your data syncs automatically across all devices via Supabase.</p>
+          <div class="supabase-sync-section">
             <p class="sync-status" id="sync-status"></p>
+            <div class="btn-group">
+              <button type="button" class="btn btn-cyan" onclick="Settings.syncNow()">🔄 Sync Now</button>
+              <button type="button" class="btn btn-sm" onclick="Settings.checkSyncStatus()">📊 Check Status</button>
+            </div>
           </div>
         </div>
 
@@ -598,9 +587,8 @@
   </div>
   </div><!-- /app-container -->
 
-  <!-- Firebase SDK (for cloud sync) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <!-- Supabase JS client (for cloud sync) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Scripts (order matters) -->
   <script src="/js/utils.js"></script>
