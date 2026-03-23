@@ -4299,26 +4299,81 @@ tr.row-archived td {
   font-weight: 600;
 }
 
-/* Mobile responsive */
-@media (max-width: 600px) {
+/* Mobile responsive - Baccarat */
+@media (max-width: 768px) {
   .baccarat-amount {
-    width: 90px;
+    width: 100px;
+  }
+  .baccarat-input {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+
+  /* Stack history table into cards on mobile */
+  .baccarat-history thead { display: none; }
+  .baccarat-history tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    gap: 0.25rem 1rem;
+  }
+  .baccarat-history tbody td {
+    display: block;
+    padding: 0.15rem 0;
+    border: none;
+    font-size: 0.85rem;
+  }
+  .baccarat-history tbody td:first-child {
+    width: 100%;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+  }
+  .baccarat-history tbody td:not(:first-child)::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255,255,255,0.4);
+  }
+}
+
+@media (max-width: 480px) {
+  .baccarat-amount {
+    width: 80px;
   }
   .profit-summary {
-    padding: 1rem;
+    padding: 0.75rem;
     border-radius: 12px;
   }
+  .profit-row {
+    font-size: 0.85rem;
+  }
   .profit-row.profit-total {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
   .share-row {
-    padding: 0.4rem 0.5rem;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.85rem;
   }
   .baccarat-table thead th,
   .baccarat-table tbody td,
   .baccarat-table tfoot td {
-    padding: 0.3rem 0.5rem;
+    padding: 0.3rem 0.4rem;
     font-size: 0.8rem;
+  }
+  .baccarat-section h3 {
+    font-size: 1rem;
+  }
+  .add-item-btn {
+    width: 100%;
+    padding: 0.6rem;
+    min-height: 44px; /* Touch target */
+  }
+  .btn-icon.btn-delete {
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 

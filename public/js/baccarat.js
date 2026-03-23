@@ -351,11 +351,11 @@ const Baccarat = {
       return `
         <tr class="${key === this._currentMonth ? 'history-current' : ''}">
           <td>${Utils.esc(label)}</td>
-          <td class="col-amount">${Baccarat._usd(calc.totalIncome)}</td>
-          <td class="col-amount">${Baccarat._usd(calc.netProfit)}</td>
-          <td class="col-amount">${Baccarat._usd(calc.bryanShare)}</td>
-          <td class="col-amount">${Baccarat._usd(calc.andreShare)}</td>
-          <td class="col-amount">${Baccarat._usd(calc.carloShare)}</td>
+          <td class="col-amount" data-label="Income">${Baccarat._usd(calc.totalIncome)}</td>
+          <td class="col-amount" data-label="Profit">${Baccarat._usd(calc.netProfit)}</td>
+          <td class="col-amount" data-label="Bryan">${Baccarat._usd(calc.bryanShare)}</td>
+          <td class="col-amount" data-label="Andre">${Baccarat._usd(calc.andreShare)}</td>
+          <td class="col-amount" data-label="Carlo">${Baccarat._usd(calc.carloShare)}</td>
         </tr>`;
     }).join('');
 
