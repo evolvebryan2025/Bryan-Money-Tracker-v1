@@ -184,6 +184,15 @@ const Utils = {
   // Parse simple markdown (bold, lists) for chat — escapes HTML first to prevent XSS
   mdToHtml(text) {
     if (!text) return '';
+    if (typeof text !== 'string') {
+      // Handle array content (e.g. tool_result messages)
+      if (Array.isArray(text)) {
+        const textBlock = text.find(b => typeof b === 'string' || b.type === 'text');
+        if (textBlock) return this.mdToHtml(typeof textBlock === 'string' ? textBlock : textBlock.text);
+        return '';
+      }
+      return '';
+    }
     // Escape HTML entities first
     const escaped = text
       .replace(/&/g, '&amp;')

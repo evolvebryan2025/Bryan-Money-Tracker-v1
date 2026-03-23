@@ -460,6 +460,11 @@ const Chat = {
     if (suggestionsEl) suggestionsEl.style.display = 'none';
 
     this.messages.forEach(m => {
+      // Skip internal tool-result messages (array content with tool_result type)
+      if (Array.isArray(m.content) && m.content.some(b => b.type === 'tool_result')) return;
+      // Skip assistant messages with non-renderable content (tool_use blocks)
+      if (m.role === 'assistant' && Array.isArray(m.content) && m.content.every(b => b.type === 'tool_use')) return;
+
       const bubble = document.createElement('div');
       bubble.className = `chat-bubble ${m.role}`;
 
@@ -485,8 +490,11 @@ const Chat = {
         }
       }
 
-      bubble.innerHTML = html;
-      container.appendChild(bubble);
+      // Only add bubble if it has content
+      if (html.trim()) {
+        bubble.innerHTML = html;
+        container.appendChild(bubble);
+      }
     });
     container.scrollTop = container.scrollHeight;
   },
