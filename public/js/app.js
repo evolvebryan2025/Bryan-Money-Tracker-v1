@@ -130,6 +130,20 @@ const App = {
       Storage.saveMonthlySnapshot();
     }
 
+    // Prince rate increase: ×2 starting April 2026
+    const now = new Date();
+    if (now.getFullYear() >= 2026 && now.getMonth() >= 3 && !Storage.getSetting('prince_rate_apr2026')) {
+      const incomes = Storage.getIncomes();
+      const updated = incomes.map(i => {
+        if (i.name === 'Prince' && i.amount === 27350) {
+          return { ...i, amount: 54700 };
+        }
+        return i;
+      });
+      Storage.saveIncomes(updated);
+      Storage.setSetting('prince_rate_apr2026', true);
+    }
+
     // Migrate all bank accounts to PHP
     if (!Storage.getSetting('banks_all_php')) {
       const banks = Storage.getBanks().map(b => ({ ...b, currency: 'PHP' }));

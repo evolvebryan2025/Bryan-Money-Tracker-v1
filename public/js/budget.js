@@ -8,7 +8,13 @@ const Budget = {
     const expenses = Storage.getExpenses ? Storage.getExpenses() : [];
 
     const totalBills = activeBills.reduce((s, b) => s + (Number(b.amount) || 0), 0);
-    const totalIncome = incomes.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+    const totalIncome = incomes.reduce((s, i) => {
+      const amount = Number(i.amount) || 0;
+      const schedule = (i.schedule || '').toLowerCase();
+      if (schedule === 'weekly') return s + (amount * 4);
+      if (schedule === 'bi-monthly' || schedule === 'bi-weekly') return s + (amount * 2);
+      return s + amount; // monthly or one-time
+    }, 0);
     const totalCash = banks.reduce((s, b) => s + (Number(b.balance) || 0), 0);
 
     // Calculate expenses this month

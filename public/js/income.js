@@ -40,12 +40,24 @@ const Income = {
       }).join('');
     }
 
-    // Summary
-    const totalExpected = incomes.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+    // Summary - calculate monthly projections based on schedule
+    const monthlyTotal = incomes.reduce((s, i) => {
+      const amt = Number(i.amount) || 0;
+      const sched = (i.schedule || '').toLowerCase();
+      if (sched === 'weekly') return s + (amt * 4);
+      if (sched === 'bi-monthly' || sched === 'bi-weekly') return s + (amt * 2);
+      return s + amt;
+    }, 0);
     const totalReceived = incomes.filter(i => i.status === 'received').reduce((s, i) => s + (Number(i.amount) || 0), 0);
-    const totalPending = incomes.filter(i => i.status !== 'received').reduce((s, i) => s + (Number(i.amount) || 0), 0);
+    const totalPending = incomes.filter(i => i.status !== 'received').reduce((s, i) => {
+      const amt = Number(i.amount) || 0;
+      const sched = (i.schedule || '').toLowerCase();
+      if (sched === 'weekly') return s + (amt * 4);
+      if (sched === 'bi-monthly' || sched === 'bi-weekly') return s + (amt * 2);
+      return s + amt;
+    }, 0);
     document.getElementById('income-summary').innerHTML =
-      `<span>Total Expected: <strong>${Utils.money(totalExpected)}</strong></span>` +
+      `<span>Monthly Projection: <strong>${Utils.money(monthlyTotal)}</strong></span>` +
       `<span>Received: <strong style="color:var(--green)">${Utils.money(totalReceived)}</strong></span>` +
       `<span>Pending: <strong style="color:var(--cyan)">${Utils.money(totalPending)}</strong></span>`;
   },
