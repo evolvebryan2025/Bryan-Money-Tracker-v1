@@ -22,6 +22,7 @@ const ASSETS_TO_CACHE = [
   '/js/team.js',
   '/js/invoices.js',
   '/js/goals.js',
+  '/js/baccarat.js',
   '/js/notifications.js',
   '/js/pwa.js',
   '/icon-192.svg',

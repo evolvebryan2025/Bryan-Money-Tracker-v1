@@ -248,6 +248,7 @@ const App = {
       case 'team': Team.render(); break;
       case 'invoices': Invoices.render(); break;
       case 'goals': Goals.render(); break;
+      case 'baccarat': Baccarat.render(); break;
       case 'chat': break; // Chat renders on init
       case 'settings': Settings.load(); break;
     }

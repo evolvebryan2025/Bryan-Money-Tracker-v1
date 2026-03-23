@@ -4095,6 +4095,233 @@ tr.row-archived td {
   color: var(--text-50);
 }
 
+/* ===== BACCARAT PROFIT SHARE ===== */
+
+.baccarat-month-selector {
+  margin-bottom: 1.5rem;
+}
+.baccarat-month-selector select {
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  color: var(--text-90);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.baccarat-month-selector select:hover,
+.baccarat-month-selector select:focus {
+  border-color: var(--border-hover);
+  outline: none;
+}
+
+.baccarat-section {
+  margin-bottom: 1.5rem;
+}
+
+.baccarat-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.baccarat-table thead th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-50);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+.baccarat-table thead th.col-amount,
+.baccarat-table tbody td.col-amount,
+.baccarat-table tfoot td.col-amount {
+  text-align: right;
+}
+.baccarat-table tbody td {
+  padding: 0.35rem 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: middle;
+}
+.baccarat-table tfoot td {
+  padding: 0.6rem 0.75rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+.baccarat-table td.col-action {
+  width: 40px;
+  text-align: center;
+}
+
+.baccarat-input {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-90);
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  width: 100%;
+  transition: border-color 0.2s, background 0.2s;
+}
+.baccarat-input:hover {
+  border-color: var(--border);
+}
+.baccarat-input:focus {
+  border-color: var(--cyan);
+  background: rgba(6,182,212,0.05);
+  outline: none;
+}
+.baccarat-amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  width: 120px;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-icon.btn-delete {
+  color: var(--text-30);
+}
+.btn-icon.btn-delete:hover {
+  color: var(--red);
+  background: var(--red-08);
+}
+
+.add-item-btn {
+  margin-top: 0.75rem;
+}
+
+/* Profit Summary - glassmorphism */
+.profit-summary {
+  background: var(--bg-glass-med);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: border-color 0.2s;
+}
+.profit-summary:hover {
+  border-color: var(--border-hover);
+}
+.profit-summary h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-50);
+  margin-bottom: 1rem;
+}
+
+.profit-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0;
+  font-size: 0.9rem;
+  color: var(--text-70);
+}
+.profit-row.profit-deduct {
+  color: var(--text-50);
+}
+.profit-row.profit-total {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-90);
+  padding: 0.5rem 0;
+}
+.profit-row.profit-total.profit-positive .profit-value {
+  color: #22c55e;
+}
+.profit-row.profit-total.profit-negative .profit-value {
+  color: var(--red);
+}
+
+.profit-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.profit-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.25rem 0;
+}
+
+.share-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-card);
+  border-radius: 8px;
+  margin-top: 0.25rem;
+  transition: background 0.2s;
+}
+.share-row:hover {
+  background: var(--bg-card-hover);
+}
+.share-name {
+  font-size: 0.85rem;
+  color: var(--text-70);
+  font-weight: 500;
+}
+.share-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+}
+
+/* History table */
+.baccarat-history tbody tr.history-current {
+  background: var(--bg-card);
+}
+.baccarat-history tbody tr.history-current td {
+  font-weight: 600;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .baccarat-amount {
+    width: 90px;
+  }
+  .profit-summary {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+  .profit-row.profit-total {
+    font-size: 1.1rem;
+  }
+  .share-row {
+    padding: 0.4rem 0.5rem;
+  }
+  .baccarat-table thead th,
+  .baccarat-table tbody td,
+  .baccarat-table tfoot td {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

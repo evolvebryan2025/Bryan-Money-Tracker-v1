@@ -193,6 +193,8 @@ const CloudSync = {
     await this.pushToCloud('expenses', expenses);
     await this.pushToCloud('team', team);
     await this.pushToCloud('invoices', invoices);
+    const baccarat = Storage.getBaccarat ? Storage.getBaccarat() : { months: {} };
+    await this.pushToCloud('baccarat', baccarat);
 
     console.log('[Sync] Uploaded all local data to cloud');
   },

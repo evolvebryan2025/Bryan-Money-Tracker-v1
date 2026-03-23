@@ -258,6 +258,15 @@ const Storage = {
   getSetting(key) { return this._get('setting_' + key); },
   setSetting(key, value) { this._set('setting_' + key, value); },
 
+  // --- Baccarat Profit Share ---
+  getBaccarat() { return this._get('baccarat') || { months: {} }; },
+  saveBaccarat(data) {
+    this._set('baccarat', data);
+    if (typeof CloudSync !== 'undefined' && CloudSync.isEnabled) {
+      CloudSync.pushToCloud('baccarat', data);
+    }
+  },
+
   // --- Chat History ---
   getChatHistory() { return this._get('chat_history') || []; },
   saveChatHistory(messages) { this._set('chat_history', messages); },
@@ -273,6 +282,7 @@ const Storage = {
       team: this.getTeam(),
       invoices: this.getInvoices(),
       monthlyHistory: this.getMonthlyHistory(),
+      baccarat: this.getBaccarat(),
       chatHistory: this.getChatHistory(),
       settings: {
         goal: this.getSetting('goal'),
@@ -291,6 +301,7 @@ const Storage = {
     if (data.team) this.saveTeam(data.team);
     if (data.invoices) this.saveInvoices(data.invoices);
     if (data.monthlyHistory) this._set('monthly_history', data.monthlyHistory);
+    if (data.baccarat) this.saveBaccarat(data.baccarat);
     if (data.chatHistory) this.saveChatHistory(data.chatHistory);
     if (data.settings) {
       if (data.settings.apiKey) this.setSetting('apiKey', data.settings.apiKey);
