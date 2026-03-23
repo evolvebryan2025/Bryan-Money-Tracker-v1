@@ -1,13 +1,11 @@
-// ===== AUTHENTICATION MODULE =====
+// ===== AUTHENTICATION MODULE (Email-Only) =====
 const Auth = {
   SESSION_KEY: 'bf_session',
 
   init() {
-    // Check if user is already logged in
     if (!this.isLoggedIn()) {
       this.showLoginScreen();
     } else {
-      // Validate session with server before showing app
       this._validateSession().then(valid => {
         if (valid) {
           this.showApp();
@@ -26,7 +24,6 @@ const Auth = {
       const sessionData = JSON.parse(session);
       const now = Date.now();
 
-      // Check client-side expiry first (quick check before server round-trip)
       if (sessionData.expires && sessionData.expires > now && sessionData.token) {
         return true;
       }
@@ -34,7 +31,6 @@ const Auth = {
       console.error('[Auth] Invalid session data');
     }
 
-    // Invalid or expired session
     localStorage.removeItem(this.SESSION_KEY);
     return false;
   },
@@ -68,15 +64,12 @@ const Auth = {
     }
   },
 
-  async login(username, password) {
-    // Hash the password client-side so raw password never leaves the browser
-    const passwordHash = await this._hashPassword(password);
-
+  async login(email) {
     try {
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, passwordHash })
+        body: JSON.stringify({ email })
       });
 
       const data = await response.json();
@@ -86,10 +79,9 @@ const Auth = {
         return { success: false, error: data.error || 'Login failed' };
       }
 
-      // Store session with server-issued token
       const session = {
         token: data.token,
-        username: data.username,
+        email: data.email,
         loginTime: Date.now(),
         expires: data.expires
       };
@@ -109,13 +101,11 @@ const Auth = {
   },
 
   showLoginScreen() {
-    // Hide main app
     const app = document.getElementById('app-container');
     const sidebar = document.getElementById('sidebar');
     if (app) app.style.display = 'none';
     if (sidebar) sidebar.style.display = 'none';
 
-    // Show login screen
     let loginScreen = document.getElementById('login-screen');
     if (!loginScreen) {
       loginScreen = this._createLoginScreen();
@@ -125,20 +115,17 @@ const Auth = {
   },
 
   showApp() {
-    // Show main app
     const app = document.getElementById('app-container');
     const sidebar = document.getElementById('sidebar');
     if (app) app.style.display = 'block';
     if (sidebar) sidebar.style.display = 'flex';
 
-    // Hide and remove login screen
     const loginScreen = document.getElementById('login-screen');
     if (loginScreen) {
       loginScreen.style.display = 'none';
       loginScreen.remove();
     }
 
-    // Initialize app if not already done
     if (!window.appInitialized) {
       App.init();
       window.appInitialized = true;
@@ -169,43 +156,24 @@ const Auth = {
           <div class="login-error" id="login-error" style="display: none;"></div>
 
           <div class="form-group">
-            <label for="login-username">Username</label>
+            <label for="login-email">Email</label>
             <input
-              type="text"
-              id="login-username"
+              type="email"
+              id="login-email"
               class="form-input"
-              placeholder="Enter username"
-              autocomplete="username"
+              placeholder="Enter your email"
+              autocomplete="email"
               required
             >
-          </div>
-
-          <div class="form-group">
-            <label for="login-password">Password</label>
-            <input
-              type="password"
-              id="login-password"
-              class="form-input"
-              placeholder="Enter password"
-              autocomplete="current-password"
-              required
-            >
-          </div>
-
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="login-remember">
-              <span>Remember me (24 hours)</span>
-            </label>
           </div>
 
           <button type="submit" class="btn btn-primary btn-block">
-            Login
+            Continue
           </button>
         </form>
 
         <div class="login-footer">
-          <p class="login-version">v2.1 • Secure Edition</p>
+          <p class="login-version">v2.2 &middot; SUMAIT Finance</p>
         </div>
       </div>
     `;
@@ -215,41 +183,22 @@ const Auth = {
   async handleLogin(event) {
     event.preventDefault();
 
-    const username = document.getElementById('login-username').value.trim();
-    const password = document.getElementById('login-password').value;
+    const email = document.getElementById('login-email').value.trim();
     const errorDiv = document.getElementById('login-error');
 
-    // Clear previous error
     errorDiv.style.display = 'none';
 
-    // Attempt login
-    const result = await this.login(username, password);
+    const result = await this.login(email);
 
     if (result.success) {
-      // Login successful
       console.log('[Auth] Login successful');
     } else {
-      // Login failed
-      errorDiv.textContent = result.error || 'Invalid username or password';
+      errorDiv.textContent = result.error || 'Unauthorized email address';
       errorDiv.style.display = 'block';
 
-      // Shake animation
       const form = document.querySelector('.login-form');
       form.classList.add('shake');
       setTimeout(() => form.classList.remove('shake'), 500);
-
-      // Clear password field
-      document.getElementById('login-password').value = '';
     }
-  },
-
-  async _hashPassword(password) {
-    // SHA-256 hash
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return hashHex;
   }
 };

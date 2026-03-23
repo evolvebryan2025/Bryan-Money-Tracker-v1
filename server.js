@@ -11,14 +11,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ===== AUTH CONFIGURATION =====
-const AUTH_CREDENTIALS = Object.freeze({
-  username: 'bryansumait',
-  passwordHash: '264bc2006a1a5388e5b8f78bb8a3ac1ab624889c2006cd4570354a04186864ed'
-});
+const AUTHORIZED_EMAIL = 'bryansumaitofficial@gmail.com';
 
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-// Active sessions: Map<token, { username, expires }>
+// Active sessions: Map<token, { email, expires }>
 const sessions = new Map();
 
 // Login attempt tracking for brute-force protection: Map<ip, timestamp[]>
@@ -122,7 +119,7 @@ function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'Session expired. Please log in again.' });
   }
 
-  req.sessionUser = session.username;
+  req.sessionUser = session.email;
   next();
 }
 
@@ -130,41 +127,41 @@ function requireAuth(req, res, next) {
 
 // POST /api/login
 app.post('/api/login', loginRateLimit, (req, res) => {
-  const { username, passwordHash } = req.body || {};
+  const { email } = req.body || {};
 
-  if (!username || !passwordHash) {
-    return res.status(400).json({ error: 'Username and password are required.' });
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required.' });
   }
 
-  if (typeof username !== 'string' || typeof passwordHash !== 'string') {
+  if (typeof email !== 'string') {
     return res.status(400).json({ error: 'Invalid input.' });
   }
 
-  // Constant-time comparison to prevent timing attacks
-  const maxUsernameLen = Math.max(username.length, AUTH_CREDENTIALS.username.length);
-  const usernameMatch = username.length === AUTH_CREDENTIALS.username.length &&
-    crypto.timingSafeEqual(
-      Buffer.from(username.padEnd(maxUsernameLen, '\0')),
-      Buffer.from(AUTH_CREDENTIALS.username.padEnd(maxUsernameLen, '\0'))
-    );
-  const hashBuffer = Buffer.from(passwordHash, 'utf8');
-  const expectedBuffer = Buffer.from(AUTH_CREDENTIALS.passwordHash, 'utf8');
-  const hashMatch = hashBuffer.length === expectedBuffer.length &&
-    crypto.timingSafeEqual(hashBuffer, expectedBuffer);
+  // Normalize and compare email (case-insensitive)
+  const normalizedEmail = email.trim().toLowerCase();
+  const expectedEmail = AUTHORIZED_EMAIL.toLowerCase();
 
-  if (!usernameMatch || !hashMatch) {
-    return res.status(401).json({ error: 'Invalid username or password.' });
+  // Constant-time comparison to prevent timing attacks
+  const maxLen = Math.max(normalizedEmail.length, expectedEmail.length);
+  const emailMatch = normalizedEmail.length === expectedEmail.length &&
+    crypto.timingSafeEqual(
+      Buffer.from(normalizedEmail.padEnd(maxLen, '\0')),
+      Buffer.from(expectedEmail.padEnd(maxLen, '\0'))
+    );
+
+  if (!emailMatch) {
+    return res.status(401).json({ error: 'Unauthorized email address.' });
   }
 
   // Generate session token
   const token = crypto.randomUUID();
   const expires = Date.now() + SESSION_DURATION_MS;
 
-  sessions.set(token, Object.freeze({ username, expires }));
+  sessions.set(token, Object.freeze({ email: normalizedEmail, expires }));
 
   return res.json({
     token,
-    username,
+    email: normalizedEmail,
     expires
   });
 });
@@ -184,7 +181,7 @@ app.get('/api/validate-session', (req, res) => {
     return res.json({ valid: false });
   }
 
-  return res.json({ valid: true, username: session.username });
+  return res.json({ valid: true, email: session.email });
 });
 
 // Tool definitions for data manipulation
@@ -547,6 +544,12 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Bryan Finance App running at http://localhost:${PORT}`);
-});
+// Only listen when running locally (not on Vercel)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Bryan Finance App running at http://localhost:${PORT}`);
+  });
+}
+
+// Export for Vercel serverless
+module.exports = app;
