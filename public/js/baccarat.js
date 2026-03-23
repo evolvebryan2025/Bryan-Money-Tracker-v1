@@ -2,6 +2,13 @@
 const Baccarat = {
   _currentMonth: null,
 
+  // Baccarat uses USD since clients pay in USD
+  _usd(amount) {
+    const num = Math.abs(Number(amount) || 0);
+    const formatted = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (amount < 0 ? '-' : '') + '$' + formatted;
+  },
+
   _init() {
     if (!this._currentMonth) {
       this._currentMonth = Utils.currentMonthKey();
@@ -115,7 +122,7 @@ const Baccarat = {
         </td>
         <td class="col-amount">
           <input type="number" class="baccarat-input baccarat-amount" value="${item.amount || ''}"
-            onchange="Baccarat._updateItem('income', ${idx}, 'amount', this.value)" placeholder="0" min="0" step="0.01">
+            onchange="Baccarat._updateItem('income', ${idx}, 'amount', this.value)" placeholder="0" step="0.01">
         </td>
         <td class="col-action">
           <button type="button" class="btn-icon btn-delete" onclick="Baccarat.removeItem('income', ${idx})" title="Remove">
@@ -133,7 +140,7 @@ const Baccarat = {
           <table class="baccarat-table">
             <thead><tr><th>Client Name</th><th class="col-amount">Amount</th><th class="col-action"></th></tr></thead>
             <tbody>${rows}</tbody>
-            <tfoot><tr><td><strong>Total</strong></td><td class="col-amount"><strong>${Utils.money(total)}</strong></td><td></td></tr></tfoot>
+            <tfoot><tr><td><strong>Total</strong></td><td class="col-amount"><strong>${Baccarat._usd(total)}</strong></td><td></td></tr></tfoot>
           </table>
         </div>
         <button type="button" class="btn btn-sm btn-cyan add-item-btn" onclick="Baccarat.addIncome()">+ Add Income</button>
@@ -179,7 +186,7 @@ const Baccarat = {
           <table class="baccarat-table">
             <thead><tr><th>Description</th><th class="col-amount">Amount</th><th class="col-action"></th></tr></thead>
             <tbody>${rows}</tbody>
-            <tfoot><tr><td><strong>Total</strong></td><td class="col-amount"><strong>${Utils.money(total)}</strong></td><td></td></tr></tfoot>
+            <tfoot><tr><td><strong>Total</strong></td><td class="col-amount"><strong>${Baccarat._usd(total)}</strong></td><td></td></tr></tfoot>
           </table>
         </div>
         <button type="button" class="btn btn-sm btn-cyan add-item-btn" onclick="Baccarat.addExpense()">+ Add Expense</button>
@@ -225,7 +232,7 @@ const Baccarat = {
           <table class="baccarat-table">
             <thead><tr><th>Name</th><th class="col-amount">Amount</th><th class="col-action"></th></tr></thead>
             <tbody>${rows}</tbody>
-            <tfoot><tr><td><strong>Total</strong></td><td class="col-amount"><strong>${Utils.money(total)}</strong></td><td></td></tr></tfoot>
+            <tfoot><tr><td><strong>Total</strong></td><td class="col-amount"><strong>${Baccarat._usd(total)}</strong></td><td></td></tr></tfoot>
           </table>
         </div>
         <button type="button" class="btn btn-sm btn-cyan add-item-btn" onclick="Baccarat.addEmployee()">+ Add Employee Cost</button>
@@ -288,33 +295,33 @@ const Baccarat = {
         <div class="profit-breakdown">
           <div class="profit-row">
             <span>Total Income</span>
-            <span class="profit-value">${Utils.money(calc.totalIncome)}</span>
+            <span class="profit-value">${Baccarat._usd(calc.totalIncome)}</span>
           </div>
           <div class="profit-row profit-deduct">
             <span>Less Expenses</span>
-            <span class="profit-value">-${Utils.money(calc.totalExpenses)}</span>
+            <span class="profit-value">-${Baccarat._usd(calc.totalExpenses)}</span>
           </div>
           <div class="profit-row profit-deduct">
             <span>Less Employees</span>
-            <span class="profit-value">-${Utils.money(calc.totalEmployees)}</span>
+            <span class="profit-value">-${Baccarat._usd(calc.totalEmployees)}</span>
           </div>
           <div class="profit-divider"></div>
           <div class="profit-row profit-total ${profitClass}">
             <span>Net Profit</span>
-            <span class="profit-value">${Utils.money(calc.netProfit)}</span>
+            <span class="profit-value">${Baccarat._usd(calc.netProfit)}</span>
           </div>
           <div class="profit-divider"></div>
           <div class="share-row">
             <span class="share-name">Bryan's Share (1/3)</span>
-            <span class="share-value">${Utils.money(calc.bryanShare)}</span>
+            <span class="share-value">${Baccarat._usd(calc.bryanShare)}</span>
           </div>
           <div class="share-row">
             <span class="share-name">Andre's Share (1/3)</span>
-            <span class="share-value">${Utils.money(calc.andreShare)}</span>
+            <span class="share-value">${Baccarat._usd(calc.andreShare)}</span>
           </div>
           <div class="share-row">
             <span class="share-name">Carlo's Share (1/3)</span>
-            <span class="share-value">${Utils.money(calc.carloShare)}</span>
+            <span class="share-value">${Baccarat._usd(calc.carloShare)}</span>
           </div>
         </div>
       </div>`;
@@ -344,11 +351,11 @@ const Baccarat = {
       return `
         <tr class="${key === this._currentMonth ? 'history-current' : ''}">
           <td>${Utils.esc(label)}</td>
-          <td class="col-amount">${Utils.money(calc.totalIncome)}</td>
-          <td class="col-amount">${Utils.money(calc.netProfit)}</td>
-          <td class="col-amount">${Utils.money(calc.bryanShare)}</td>
-          <td class="col-amount">${Utils.money(calc.andreShare)}</td>
-          <td class="col-amount">${Utils.money(calc.carloShare)}</td>
+          <td class="col-amount">${Baccarat._usd(calc.totalIncome)}</td>
+          <td class="col-amount">${Baccarat._usd(calc.netProfit)}</td>
+          <td class="col-amount">${Baccarat._usd(calc.bryanShare)}</td>
+          <td class="col-amount">${Baccarat._usd(calc.andreShare)}</td>
+          <td class="col-amount">${Baccarat._usd(calc.carloShare)}</td>
         </tr>`;
     }).join('');
 

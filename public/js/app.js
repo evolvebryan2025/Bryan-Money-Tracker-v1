@@ -130,6 +130,29 @@ const App = {
       Storage.saveMonthlySnapshot();
     }
 
+    // Seed Baccarat data for March 2026 - Thomas client
+    if (!Storage.getSetting('baccarat_seed_thomas')) {
+      const baccarat = Storage.getBaccarat();
+      const march = baccarat.months['2026-03'] || { income: [], expenses: [], employees: [] };
+
+      // Only seed if March data is empty
+      if (march.income.length === 0) {
+        baccarat.months['2026-03'] = {
+          income: [
+            { name: 'Thomas paid (gross)', amount: 625 },
+            { name: 'PayPal fee (4.45%)', amount: -27.80 }
+          ],
+          expenses: [
+            { name: 'Instantly (2 domains + 10 emails)', amount: 80 },
+            { name: 'Data to Leads (500 leads)', amount: 60 }
+          ],
+          employees: []
+        };
+        Storage.saveBaccarat(baccarat);
+      }
+      Storage.setSetting('baccarat_seed_thomas', true);
+    }
+
     // Prince rate increase: ×2 starting April 2026
     const now = new Date();
     if (now.getFullYear() >= 2026 && now.getMonth() >= 3 && !Storage.getSetting('prince_rate_apr2026')) {
