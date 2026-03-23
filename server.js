@@ -341,7 +341,7 @@ app.post('/api/chat', requireAuth, rateLimit, async (req, res) => {
 
     // Make API call with tool support
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6-20250514',
       max_tokens: 2048,
       system: systemPrompt,
       messages: sanitizedMessages,
@@ -376,10 +376,11 @@ app.post('/api/chat', requireAuth, rateLimit, async (req, res) => {
 
     res.json({ response: text });
   } catch (err) {
-    console.error('Anthropic API error:', err.message);
-    const safeMsg = err.status === 401 ? 'Invalid API key. Check your .env file.'
+    console.error('Anthropic API error:', err.status, err.message, err.error || '');
+    const safeMsg = err.status === 401 ? 'Invalid API key. Check your environment variables.'
       : err.status === 429 ? 'API rate limit reached. Please wait a moment.'
-      : 'AI service temporarily unavailable. Please try again.';
+      : err.status === 404 ? 'Model not found. Check server configuration.'
+      : `AI service error (${err.status || 'unknown'}). Please try again.`;
     res.status(500).json({ error: safeMsg });
   }
 });
