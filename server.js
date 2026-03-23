@@ -302,8 +302,20 @@ const TOOLS = [
     }
   },
   {
+    name: 'bulk_mark_bills_paid',
+    description: 'Mark multiple bills as paid at once. Use when the user says "mark all as paid" or wants to mark several bills paid. You can filter by status, category, or specific bill IDs.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        billIds: { type: 'array', items: { type: 'string' }, description: 'Specific bill IDs to mark as paid. If empty, uses filter instead.' },
+        filter: { type: 'string', enum: ['all_unpaid', 'all_overdue', 'all'], description: 'Which bills to mark paid if no specific IDs given' }
+      },
+      required: []
+    }
+  },
+  {
     name: 'get_bills',
-    description: 'Get list of all bills. Use when you need to see current bills before updating them.',
+    description: 'Get list of all bills with their IDs, names, amounts, due dates, and status. Use when you need to see current bills before updating them.',
     input_schema: {
       type: 'object',
       properties: {},
@@ -490,6 +502,33 @@ function executeToolCall(toolName, input, currentData) {
         message: `${bankName} balance updated to ₱${input.balance.toLocaleString()}.`
       };
 
+    case 'bulk_mark_bills_paid': {
+      let targetBills;
+      if (input.billIds && input.billIds.length > 0) {
+        targetBills = bills.filter(b => input.billIds.includes(b.id) && b.status !== 'paid');
+      } else if (input.filter === 'all_overdue') {
+        targetBills = bills.filter(b => b.status === 'overdue');
+      } else if (input.filter === 'all_unpaid') {
+        targetBills = bills.filter(b => b.status === 'unpaid' || b.status === 'overdue');
+      } else {
+        targetBills = bills.filter(b => b.status !== 'paid');
+      }
+
+      if (targetBills.length === 0) {
+        return { success: true, action: 'bulk_mark_bills_paid', data: { billIds: [], count: 0 }, message: 'No unpaid bills found to mark as paid.' };
+      }
+
+      const billIds = targetBills.map(b => b.id);
+      const names = targetBills.map(b => b.name);
+      const total = targetBills.reduce((s, b) => s + (Number(b.amount) || 0), 0);
+      return {
+        success: true,
+        action: 'bulk_mark_bills_paid',
+        data: { billIds, count: billIds.length },
+        message: `Marked ${billIds.length} bills as paid (₱${total.toLocaleString()} total): ${names.join(', ')}.`
+      };
+    }
+
     case 'get_bills':
       return {
         success: true,
@@ -509,11 +548,18 @@ function buildSystemPrompt(ctx) {
 ## Your Capabilities
 You can:
 - Add, update, and delete bills
+- Mark individual or ALL bills as paid (use bulk_mark_bills_paid for multiple)
 - Add income sources
 - Track expenses
 - Update bank balances
 - Analyze financial data from screenshots and images
 - Answer financial questions
+
+## Important Rules for Tool Usage
+- When the user asks to mark multiple or all bills as paid, use bulk_mark_bills_paid with filter='all_unpaid' instead of marking them one by one
+- When the user says something is paid, USE THE TOOL immediately - don't just acknowledge it
+- Always answer the user's question AFTER using a tool - don't leave them hanging
+- If you need to see bills first, use get_bills, then in the continuation use bulk_mark_bills_paid
 
 When users upload screenshots or images containing financial information (bills, receipts, invoices), analyze them carefully and extract:
 - Bill name

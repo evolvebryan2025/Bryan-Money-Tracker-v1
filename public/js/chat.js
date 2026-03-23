@@ -323,7 +323,9 @@ const Chat = {
         const result = await this._executeToolUse(data.toolUse);
 
         // Add assistant message showing the tool was used
-        const toolMessage = `${result.message}\n\n✅ ${result.action} completed successfully.`;
+        const toolMessage = result.success !== false
+          ? `${result.message || 'Done.'}\n\n✅ ${result.action || 'Action'} completed successfully.`
+          : `**Error:** ${result.error || 'Action failed.'}`;
         this._addMessage('assistant', toolMessage);
 
         // Add the assistant's tool use to messages for continuation
@@ -381,6 +383,15 @@ const Chat = {
 
       case 'mark_bill_paid':
         Storage.updateBill(result.billId, { status: 'paid' });
+        Bills.render();
+        Dashboard.render();
+        Insights.invalidateCache();
+        break;
+
+      case 'bulk_mark_bills_paid':
+        if (result.data && result.data.billIds) {
+          result.data.billIds.forEach(id => Storage.updateBill(id, { status: 'paid' }));
+        }
         Bills.render();
         Dashboard.render();
         Insights.invalidateCache();
