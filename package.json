@@ -5,10 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "db:verify": "node scripts/verify-schema.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
+    "@anthropic-ai/sdk": "^0.80.0",
+    "@supabase/supabase-js": "^2.99.3",
     "dotenv": "^16.4.7",
     "express": "^4.21.2"
   }
