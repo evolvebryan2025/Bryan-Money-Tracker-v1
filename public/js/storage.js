@@ -15,6 +15,16 @@ const Storage = {
 
   // --- Bills ---
   getBills() { return this._get('bills') || []; },
+  getActiveBills() { return this.getBills().filter(b => b.archived !== true); },
+  getArchivedBills() { return this.getBills().filter(b => b.archived === true); },
+  archiveBill(id) {
+    const bills = this.getBills().map(b => b.id === id ? { ...b, archived: true } : b);
+    this.saveBills(bills);
+  },
+  unarchiveBill(id) {
+    const bills = this.getBills().map(b => b.id === id ? { ...b, archived: false } : b);
+    this.saveBills(bills);
+  },
   saveBills(bills) {
     this._set('bills', bills);
     if (typeof CloudSync !== 'undefined' && CloudSync.isEnabled) {
@@ -34,7 +44,15 @@ const Storage = {
     return newBill;
   },
   updateBill(id, updates) {
-    const bills = this.getBills().map(b => b.id === id ? { ...b, ...updates } : b);
+    const bills = this.getBills().map(b => {
+      if (b.id !== id) return b;
+      const updated = { ...b, ...updates };
+      // Auto-archive when marked as paid
+      if (updates.status === 'paid') {
+        return { ...updated, archived: true };
+      }
+      return updated;
+    });
     this.saveBills(bills);
   },
   deleteBill(id) {
@@ -342,7 +360,7 @@ const Storage = {
     const bills = this.getBills().map(b => {
       if (b.dueDate && b.dueDate.substring(0, 7) < currentMonth && b.status !== 'paid' && !exceptSet.has(b.name)) {
         modified = true;
-        return { ...b, status: 'paid' };
+        return { ...b, status: 'paid', archived: true };
       }
       return b;
     });

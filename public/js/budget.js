@@ -1,12 +1,13 @@
 // ===== BUDGET ENGINE =====
 const Budget = {
   calculate() {
-    const bills = Storage.getBills();
+    const activeBills = Storage.getActiveBills();
+    const allBills = Storage.getBills();
     const incomes = Storage.getIncomes();
     const banks = Storage.getBanks();
     const expenses = Storage.getExpenses ? Storage.getExpenses() : [];
 
-    const totalBills = bills.reduce((s, b) => s + (Number(b.amount) || 0), 0);
+    const totalBills = activeBills.reduce((s, b) => s + (Number(b.amount) || 0), 0);
     const totalIncome = incomes.reduce((s, i) => s + (Number(i.amount) || 0), 0);
     const totalCash = banks.reduce((s, b) => s + (Number(b.balance) || 0), 0);
 
@@ -16,7 +17,7 @@ const Budget = {
       .filter(e => e.date && e.date.startsWith(currentMonth))
       .reduce((s, e) => s + e.amount, 0);
 
-    const unpaidBills = bills.filter(b => b.status !== 'paid');
+    const unpaidBills = activeBills.filter(b => b.status !== 'paid');
     const totalUnpaid = unpaidBills.reduce((s, b) => s + (Number(b.amount) || 0), 0);
 
     // Bills due in next 7 days
@@ -48,7 +49,8 @@ const Budget = {
     // Next expected income
     const nextIncome = this._findNextIncome(incomes);
 
-    const billsPaidThisMonth = bills
+    // Spent includes archived (paid) bills for the current month
+    const billsPaidThisMonth = allBills
       .filter(b => b.status === 'paid' && b.dueDate && b.dueDate.startsWith(currentMonth))
       .reduce((s, b) => s + b.amount, 0);
 

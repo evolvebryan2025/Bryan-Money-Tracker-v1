@@ -1,9 +1,27 @@
 // ===== BILLS & SALARY =====
 const Bills = {
   _selected: new Set(),
+  _viewMode: 'active', // 'active' or 'archived'
+
+  showActive() {
+    this._viewMode = 'active';
+    this._selected.clear();
+    this.render();
+  },
+
+  showArchived() {
+    this._viewMode = 'archived';
+    this._selected.clear();
+    this.render();
+  },
 
   render() {
-    const bills = Storage.getBills();
+    const isArchived = this._viewMode === 'archived';
+    const allBills = Storage.getBills();
+    const activeBills = allBills.filter(b => b.archived !== true);
+    const archivedBills = allBills.filter(b => b.archived === true);
+    const bills = isArchived ? archivedBills : activeBills;
+
     const filterStatus = document.getElementById('bills-filter-status').value;
     const filterCategory = document.getElementById('bills-filter-category').value;
 
@@ -11,10 +29,10 @@ const Bills = {
     today.setHours(0, 0, 0, 0);
 
     let filtered = bills.map(b => {
-      // Auto-detect overdue
-      if (b.status !== 'paid' && b.dueDate) {
+      // Auto-detect overdue (only for active bills)
+      if (!isArchived && b.status !== 'paid' && b.dueDate) {
         const d = new Date(b.dueDate);
-        if (d < today) b.status = 'overdue';
+        if (d < today) return { ...b, status: 'overdue' };
       }
       return b;
     });
@@ -39,9 +57,26 @@ const Bills = {
       if (!filteredIds.has(id)) this._selected.delete(id);
     }
 
+    // Update archive tab states and counts
+    this._updateArchiveTabs(activeBills.length, archivedBills.length);
+
     const tbody = document.getElementById('bills-tbody');
+    const emptyLabel = isArchived ? 'No archived bills' : 'No bills found';
+
     if (filtered.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No bills found</td></tr>';
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">${emptyLabel}</td></tr>`;
+    } else if (isArchived) {
+      // Archived view: view-only rows, no actions
+      tbody.innerHTML = filtered.map(b => `
+          <tr class="row-archived">
+            <td class="col-check" data-label=""></td>
+            <td data-label="Bill Name"><strong>${Utils.esc(b.name)}</strong></td>
+            <td data-label="Category">${Utils.esc(b.category || '--')}</td>
+            <td class="col-amount" data-label="Amount">${b.amount ? Utils.money(b.amount) : '--'}</td>
+            <td data-label="Due Date">${b.dueDate ? Utils.dateStr(b.dueDate) : '--'}</td>
+            <td data-label="Status"><span class="badge badge-paid">paid</span></td>
+            <td class="col-actions" data-label=""></td>
+          </tr>`).join('');
     } else {
       tbody.innerHTML = filtered.map(b => {
         const days = b.dueDate ? Utils.daysUntil(b.dueDate) : null;
@@ -70,23 +105,49 @@ const Bills = {
       }).join('');
     }
 
-    // Update select-all checkbox state
+    // Update select-all checkbox state (only for active view)
     const selectAll = document.getElementById('bills-select-all');
     if (selectAll) {
-      selectAll.checked = filtered.length > 0 && this._selected.size === filtered.length;
+      if (isArchived) {
+        selectAll.checked = false;
+        selectAll.disabled = true;
+      } else {
+        selectAll.disabled = false;
+        selectAll.checked = filtered.length > 0 && this._selected.size === filtered.length;
+      }
     }
 
-    // Update bulk bar
+    // Update bulk bar (hidden in archived view)
     this._updateBulkBar();
 
-    // Summary
-    const totalAll = bills.reduce((s, b) => s + (Number(b.amount) || 0), 0);
-    const totalUnpaid = bills.filter(b => b.status !== 'paid').reduce((s, b) => s + (Number(b.amount) || 0), 0);
-    const totalPaid = bills.filter(b => b.status === 'paid').reduce((s, b) => s + (Number(b.amount) || 0), 0);
+    // Summary - always show active bill totals
+    const totalAll = activeBills.reduce((s, b) => s + (Number(b.amount) || 0), 0);
+    const totalUnpaid = activeBills.filter(b => b.status !== 'paid').reduce((s, b) => s + (Number(b.amount) || 0), 0);
+    const totalPaid = activeBills.filter(b => b.status === 'paid').reduce((s, b) => s + (Number(b.amount) || 0), 0);
     document.getElementById('bills-summary').innerHTML =
       `<span>Total: <strong>${Utils.money(totalAll)}</strong></span>` +
       `<span>Unpaid: <strong style="color:var(--red)">${Utils.money(totalUnpaid)}</strong></span>` +
       `<span>Paid: <strong style="color:var(--green)">${Utils.money(totalPaid)}</strong></span>`;
+  },
+
+  _updateArchiveTabs(activeCount, archivedCount) {
+    const activeCountEl = document.getElementById('active-count');
+    const archivedCountEl = document.getElementById('archived-count');
+    if (activeCountEl) activeCountEl.textContent = activeCount;
+    if (archivedCountEl) archivedCountEl.textContent = archivedCount;
+
+    const tabs = document.querySelectorAll('.archive-tabs .tab-btn');
+    tabs.forEach(tab => {
+      tab.classList.remove('active');
+    });
+    const activeIndex = this._viewMode === 'active' ? 0 : 1;
+    if (tabs[activeIndex]) tabs[activeIndex].classList.add('active');
+
+    // Hide/show bulk bar container and filter bar based on view
+    const bulkBar = document.getElementById('bills-bulk-bar');
+    if (bulkBar && this._viewMode === 'archived') {
+      bulkBar.classList.remove('visible');
+    }
   },
 
   // --- Selection ---
@@ -128,7 +189,7 @@ const Bills = {
   },
 
   _getFilteredBills() {
-    const bills = Storage.getBills();
+    const bills = this._viewMode === 'archived' ? Storage.getArchivedBills() : Storage.getActiveBills();
     const filterStatus = document.getElementById('bills-filter-status').value;
     const filterCategory = document.getElementById('bills-filter-category').value;
     let filtered = bills;
@@ -156,7 +217,7 @@ const Bills = {
     if (count === 0) return;
 
     const bills = Storage.getBills().map(b => {
-      if (this._selected.has(b.id)) return { ...b, status: 'paid' };
+      if (this._selected.has(b.id)) return { ...b, status: 'paid', archived: true };
       return b;
     });
     Storage.saveBills(bills);

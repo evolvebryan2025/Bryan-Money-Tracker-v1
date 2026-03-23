@@ -303,6 +303,10 @@
           <option value="other">Other</option>
         </select>
       </div>
+      <div class="archive-tabs">
+        <button class="tab-btn active" onclick="Bills.showActive()">Active Bills <span class="tab-count" id="active-count">0</span></button>
+        <button class="tab-btn" onclick="Bills.showArchived()">Archived <span class="tab-count" id="archived-count">0</span></button>
+      </div>
       <!-- Bulk action bar (hidden until selection) -->
       <div class="bulk-bar" id="bills-bulk-bar">
         <span class="bulk-count" id="bills-bulk-count">0 selected</span>

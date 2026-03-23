@@ -396,7 +396,7 @@ const Chat = {
         break;
 
       case 'mark_bill_paid':
-        Storage.updateBill(result.billId, { status: 'paid' });
+        Storage.updateBill(result.billId, { status: 'paid', archived: true });
         Bills.render();
         Dashboard.render();
         Insights.invalidateCache();
@@ -404,7 +404,7 @@ const Chat = {
 
       case 'bulk_mark_bills_paid':
         if (result.data && result.data.billIds) {
-          result.data.billIds.forEach(id => Storage.updateBill(id, { status: 'paid' }));
+          result.data.billIds.forEach(id => Storage.updateBill(id, { status: 'paid', archived: true }));
         }
         Bills.render();
         Dashboard.render();
